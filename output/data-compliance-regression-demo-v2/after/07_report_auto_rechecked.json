@@ -1,0 +1,303 @@
+{
+  "document_name": "privacy-remediation-demo-after",
+  "review_scope": "数据合规相关文件审查",
+  "document_type": "privacy_policy",
+  "selected_review_paths": [
+    "disclosure_check",
+    "third_party_sharing_check",
+    "outbound_transfer_check",
+    "lawful_basis_check",
+    "purpose_scope_check",
+    "sensitive_personal_info_check",
+    "field_purpose_legal_basis_check",
+    "consent_feature_coupling_check",
+    "retention_deletion_check",
+    "consistency_check"
+  ],
+  "summary": "共汇总 6 个风险/优化项，其中高风险 0 个、中风险 0 个、建议优化 6 个。",
+  "auto_recheck_triggered": false,
+  "items": [
+    {
+      "risk_point": "重要处理事项披露可能不充分",
+      "risk_level": "建议优化",
+      "legal_basis": "《个人信息保护法》第17条",
+      "reason": "触发主题：处理, 个人信息, 信息类型；已识别要素：处理目的, 处理方式, 信息范围, 用户权利与联系方式；模糊表述：等；证据片段：向第三方提供个人信息时，将明确告知接收方名称、联系方式、处理目的、处理方式和信息类型。 / 我们将分别说明各类信息对应的处理目的、法律基础与保存期限。。 处理个人信息前，通常应告知处理目的、方式、种类、保存期限以及行使权利方式等事项。",
+      "suggestion": "补充处理目的、方式、范围及用户权利告知。",
+      "auto_recheck": false,
+      "evidence": [
+        "向第三方提供个人信息时，将明确告知接收方名称、联系方式、处理目的、处理方式和信息类型。",
+        "我们将分别说明各类信息对应的处理目的、法律基础与保存期限。"
+      ],
+      "coverage_ratio": 1.0,
+      "trigger_hits": [
+        "处理",
+        "个人信息",
+        "信息类型"
+      ],
+      "missing_groups": [],
+      "ambiguity_hits": [
+        "等"
+      ],
+      "path_ids": [
+        "disclosure_check"
+      ],
+      "sources": [
+        "pipl-17"
+      ],
+      "theme_name": "披露与权利告知",
+      "auto_recheck_status": "未触发",
+      "auto_recheck_notes": "当前风险等级未触发自动复核。",
+      "auto_recheck_decision": "未触发",
+      "corroboration_count": 1,
+      "related_risk_points": [
+        "保存期限或删除机制表达可能不足"
+      ]
+    },
+    {
+      "risk_point": "第三方共享或委托处理披露可能不足",
+      "risk_level": "建议优化",
+      "legal_basis": "《个人信息保护法》第23条",
+      "reason": "触发主题：第三方；已识别要素：第三方身份或类别, 共享信息范围, 共享目的, 处理方式或管理要求；模糊表述：等；证据片段：向第三方提供个人信息时，将明确告知接收方名称、联系方式、处理目的、处理方式和信息类型。。 向其他个人信息处理者提供个人信息时，通常应告知接收方名称或姓名、联系方式、处理目的、处理方式和个人信息种类。",
+      "suggestion": "补充第三方类别、共享范围、目的及处理方式。",
+      "auto_recheck": false,
+      "evidence": [
+        "向第三方提供个人信息时，将明确告知接收方名称、联系方式、处理目的、处理方式和信息类型。"
+      ],
+      "coverage_ratio": 1.0,
+      "trigger_hits": [
+        "第三方"
+      ],
+      "missing_groups": [],
+      "ambiguity_hits": [
+        "等"
+      ],
+      "path_ids": [
+        "third_party_sharing_check"
+      ],
+      "sources": [
+        "pipl-23"
+      ],
+      "theme_name": "第三方共享与合作方治理",
+      "auto_recheck_status": "未触发",
+      "auto_recheck_notes": "当前风险等级未触发自动复核。",
+      "auto_recheck_decision": "未触发",
+      "corroboration_count": 0,
+      "related_risk_points": []
+    },
+    {
+      "risk_point": "合法性基础与必要性表达可能不足",
+      "risk_level": "建议优化",
+      "legal_basis": "《个人信息保护法》第13条、第6条",
+      "reason": "触发主题：同意, 处理, 推荐；已识别要素：合法性基础；待补要素：必要性边界, 授权范围；证据片段：个性化推荐为可选功能，单独征得同意后开启，用户可随时关闭，关闭后不影响基础功能。 / 我们将分别说明各类信息对应的处理目的、法律基础与保存期限。。 处理个人信息需要有相应合法性基础，并应具有明确、合理目的，采取对个人权益影响最小的方式。",
+      "suggestion": "说明必要性边界与最小必要范围；明确授权或处理范围，避免范围过宽。",
+      "auto_recheck": false,
+      "evidence": [
+        "个性化推荐为可选功能，单独征得同意后开启，用户可随时关闭，关闭后不影响基础功能。",
+        "我们将分别说明各类信息对应的处理目的、法律基础与保存期限。"
+      ],
+      "coverage_ratio": 0.33,
+      "trigger_hits": [
+        "同意",
+        "处理",
+        "推荐"
+      ],
+      "missing_groups": [
+        "必要性边界",
+        "授权范围"
+      ],
+      "ambiguity_hits": [],
+      "path_ids": [
+        "lawful_basis_check"
+      ],
+      "sources": [
+        "pipl-13-6"
+      ],
+      "theme_name": "处理目的与法律基础",
+      "auto_recheck_status": "未触发",
+      "auto_recheck_notes": "当前风险等级未触发自动复核。",
+      "auto_recheck_decision": "未触发",
+      "corroboration_count": 2,
+      "related_risk_points": [
+        "处理目的与信息范围匹配性可能不足",
+        "字段、处理目的与法律基础之间的对应关系可能不足"
+      ]
+    },
+    {
+      "risk_point": "处理目的与信息范围匹配性可能不足",
+      "risk_level": "建议优化",
+      "legal_basis": "《个人信息保护法》第6条、第13条",
+      "reason": "涉及信息：位置信息, 设备标识；涉及目的：个性化推荐；已识别要素：信息与目的对应关系, 必要性边界或最小化说明, 可选性或替代方案；待补要素：具体业务目的；证据片段：我们仅在提供账号登录、附近门店展示等功能所必需的范围内处理手机号、设备标识和位置信息。 / 个性化推荐为可选功能，单独征得同意后开启，用户可随时关闭，关闭后不影响基础功能。。 处理个人信息应具有明确、合理目的，并限于实现处理目的的最小范围；处理活动还应有相应合法性基础。",
+      "suggestion": "把处理目的写具体，不要只写服务优化、体验提升等宽泛表述。",
+      "auto_recheck": false,
+      "evidence": [
+        "我们仅在提供账号登录、附近门店展示等功能所必需的范围内处理手机号、设备标识和位置信息。",
+        "个性化推荐为可选功能，单独征得同意后开启，用户可随时关闭，关闭后不影响基础功能。"
+      ],
+      "coverage_ratio": 0.75,
+      "trigger_hits": [
+        "位置信息",
+        "设备标识",
+        "个性化推荐"
+      ],
+      "missing_groups": [
+        "具体业务目的"
+      ],
+      "ambiguity_hits": [],
+      "path_ids": [
+        "purpose_scope_check"
+      ],
+      "sources": [
+        "pipl-6-13-purpose"
+      ],
+      "theme_name": "处理目的与法律基础",
+      "auto_recheck_status": "未触发",
+      "auto_recheck_notes": "当前风险等级未触发自动复核。",
+      "auto_recheck_decision": "未触发",
+      "corroboration_count": 2,
+      "related_risk_points": [
+        "合法性基础与必要性表达可能不足",
+        "字段、处理目的与法律基础之间的对应关系可能不足"
+      ]
+    },
+    {
+      "risk_point": "字段、处理目的与法律基础之间的对应关系可能不足",
+      "risk_level": "建议优化",
+      "legal_basis": "《个人信息保护法》第13条、第17条、第6条",
+      "reason": "涉及字段：手机号, 位置信息, 设备标识；涉及目的：个性化推荐, 附近门店；已识别法律基础：同意；已识别要素：字段信息, 处理目的, 法律基础；待补要素：字段-目的-依据对应关系；高风险目的：个性化推荐；证据片段：我们仅在提供账号登录、附近门店展示等功能所必需的范围内处理手机号、设备标识和位置信息。 / 个性化推荐为可选功能，单独征得同意后开启，用户可随时关闭，关闭后不影响基础功能。。 处理个人信息应有明确、合理目的并限于最小必要范围；处理前通常应告知处理目的、方式、种类等事项，并说明相应的法律基础。",
+      "suggestion": "把字段、目的和法律基础一一对应写清，不要混成一团；把字段、目的、法律基础做一一对应说明，避免混合表述。",
+      "auto_recheck": false,
+      "evidence": [
+        "我们仅在提供账号登录、附近门店展示等功能所必需的范围内处理手机号、设备标识和位置信息。",
+        "个性化推荐为可选功能，单独征得同意后开启，用户可随时关闭，关闭后不影响基础功能。"
+      ],
+      "coverage_ratio": 0.75,
+      "trigger_hits": [
+        "手机号",
+        "位置信息",
+        "设备标识",
+        "个性化推荐",
+        "附近门店",
+        "同意"
+      ],
+      "missing_groups": [
+        "字段-目的-依据对应关系"
+      ],
+      "ambiguity_hits": [],
+      "path_ids": [
+        "field_purpose_legal_basis_check"
+      ],
+      "sources": [
+        "pipl-13-17-6-triad"
+      ],
+      "theme_name": "处理目的与法律基础",
+      "auto_recheck_status": "未触发",
+      "auto_recheck_notes": "当前风险等级未触发自动复核。",
+      "auto_recheck_decision": "未触发",
+      "corroboration_count": 2,
+      "related_risk_points": [
+        "合法性基础与必要性表达可能不足",
+        "处理目的与信息范围匹配性可能不足"
+      ]
+    },
+    {
+      "risk_point": "保存期限或删除机制表达可能不足",
+      "risk_level": "建议优化",
+      "legal_basis": "《个人信息保护法》第19条、第47条",
+      "reason": "触发主题：保存, 删除, 期限；已识别要素：保存期限, 删除触发条件；待补要素：删除方式；证据片段：我们将分别说明各类信息对应的处理目的、法律基础与保存期限。 / 用户可通过隐私政策公示的联系渠道行使查询、更正、删除和撤回同意等权利。。 个人信息保存期限一般应为实现处理目的所必要的最短时间；在法定删除情形出现时，应及时删除或作匿名化处理。",
+      "suggestion": "说明删除、匿名化或去标识化处理方式。",
+      "auto_recheck": false,
+      "evidence": [
+        "我们将分别说明各类信息对应的处理目的、法律基础与保存期限。",
+        "用户可通过隐私政策公示的联系渠道行使查询、更正、删除和撤回同意等权利。"
+      ],
+      "coverage_ratio": 0.67,
+      "trigger_hits": [
+        "保存",
+        "删除",
+        "期限"
+      ],
+      "missing_groups": [
+        "删除方式"
+      ],
+      "ambiguity_hits": [],
+      "path_ids": [
+        "retention_deletion_check"
+      ],
+      "sources": [
+        "pipl-19-47"
+      ],
+      "theme_name": "披露与权利告知",
+      "auto_recheck_status": "未触发",
+      "auto_recheck_notes": "当前风险等级未触发自动复核。",
+      "auto_recheck_decision": "未触发",
+      "corroboration_count": 1,
+      "related_risk_points": [
+        "重要处理事项披露可能不充分"
+      ]
+    }
+  ],
+  "notes": [
+    "本报告用于辅助合规审查，不替代律师或法务最终判断。",
+    "当命中高风险、依据不足或判断存在不确定性时，系统会自动触发二次复核。",
+    "[disclosure_check] 命中 3 个触发点；关键要素覆盖 4/4；模糊表述 1 处。",
+    "[third_party_sharing_check] 命中 1 个触发点；关键要素覆盖 4/4；模糊表述 1 处。",
+    "[outbound_transfer_check] 未发现明显触发信号。",
+    "[lawful_basis_check] 命中 3 个触发点；关键要素覆盖 1/3；模糊表述 0 处。",
+    "[purpose_scope_check] 命中 3 个相关信号；关键要素覆盖 3/4；宽泛表述 0 处。",
+    "[sensitive_personal_info_check] 未发现明显的敏感个人信息处理信号。",
+    "[field_purpose_legal_basis_check] 命中 6 个联动信号；关键要素覆盖 3/4；模糊表述 0 处。",
+    "[consent_feature_coupling_check] 命中主题：个性化推荐, 附近门店, 同意；可选功能与同意关系说明较完整，暂未形成明确风险。",
+    "[retention_deletion_check] 命中 3 个触发点；关键要素覆盖 2/3；模糊表述 0 处。",
+    "[consistency_check] 未发现明显的前后表述冲突。"
+  ],
+  "stats": {
+    "total": 6,
+    "high_risk": 0,
+    "medium_risk": 0,
+    "advisory": 6
+  },
+  "auto_recheck_summary": "触发 0 项，维持判断 0 项，仍需补充支持信息 0 项。",
+  "auto_recheck_stats": {
+    "triggered": 0,
+    "maintained": 0,
+    "need_more_support": 0
+  },
+  "risk_clusters": [
+    {
+      "theme_id": "purpose_and_legal_basis",
+      "theme_name": "处理目的与法律基础",
+      "item_count": 3,
+      "high_risk_count": 0,
+      "medium_risk_count": 0,
+      "advisory_count": 3,
+      "risk_points": [
+        "合法性基础与必要性表达可能不足",
+        "处理目的与信息范围匹配性可能不足",
+        "字段、处理目的与法律基础之间的对应关系可能不足"
+      ]
+    },
+    {
+      "theme_id": "disclosure_and_rights",
+      "theme_name": "披露与权利告知",
+      "item_count": 2,
+      "high_risk_count": 0,
+      "medium_risk_count": 0,
+      "advisory_count": 2,
+      "risk_points": [
+        "重要处理事项披露可能不充分",
+        "保存期限或删除机制表达可能不足"
+      ]
+    },
+    {
+      "theme_id": "third_party_and_sdk",
+      "theme_name": "第三方共享与合作方治理",
+      "item_count": 1,
+      "high_risk_count": 0,
+      "medium_risk_count": 0,
+      "advisory_count": 1,
+      "risk_points": [
+        "第三方共享或委托处理披露可能不足"
+      ]
+    }
+  ]
+}

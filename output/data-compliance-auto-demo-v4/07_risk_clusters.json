@@ -1,0 +1,52 @@
+{
+  "document_name": "auto-remediation-v1-demo",
+  "cluster_count": 4,
+  "clusters": [
+    {
+      "theme_id": "purpose_and_legal_basis",
+      "theme_name": "处理目的与法律基础",
+      "item_count": 3,
+      "high_risk_count": 0,
+      "medium_risk_count": 1,
+      "advisory_count": 2,
+      "risk_points": [
+        "处理目的与信息范围匹配性可能不足",
+        "合法性基础与必要性表达可能不足",
+        "字段、处理目的与法律基础之间的对应关系可能不足"
+      ]
+    },
+    {
+      "theme_id": "disclosure_and_rights",
+      "theme_name": "披露与权利告知",
+      "item_count": 1,
+      "high_risk_count": 0,
+      "medium_risk_count": 1,
+      "advisory_count": 0,
+      "risk_points": [
+        "重要处理事项披露可能不充分"
+      ]
+    },
+    {
+      "theme_id": "consent_and_feature_boundary",
+      "theme_name": "同意与功能边界",
+      "item_count": 1,
+      "high_risk_count": 0,
+      "medium_risk_count": 1,
+      "advisory_count": 0,
+      "risk_points": [
+        "基于同意的可选功能与基础功能绑定关系可能不清"
+      ]
+    },
+    {
+      "theme_id": "third_party_and_sdk",
+      "theme_name": "第三方共享与合作方治理",
+      "item_count": 1,
+      "high_risk_count": 0,
+      "medium_risk_count": 0,
+      "advisory_count": 1,
+      "risk_points": [
+        "第三方共享或委托处理披露可能不足"
+      ]
+    }
+  ]
+}

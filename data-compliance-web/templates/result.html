@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>审查结果 - 数据合规智能审查系统</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'Noto Sans SC', 'sans-serif'] },
+                    colors: {
+                        primary: { 50: '#f0f4ff', 100: '#e0eaff', 500: '#3b66f5', 600: '#2549d1', 700: '#1a37ab', 900: '#0f1f5e' },
+                        risk: { high: '#ef4444', medium: '#f59e0b', low: '#3b82f6', none: '#22c55e' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background: #f6f7fb; }
+        .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; }
+        .accordion-content { display: none; }
+        .accordion-content.open { display: block; }
+        .risk-high { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        .risk-medium { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+        .risk-low { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+        .risk-none { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .btn-primary { background: linear-gradient(135deg, #3b66f5 0%, #2549d1 100%); color: #fff; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -4px rgba(59,102,245,0.35); }
+        .tab-active { border-bottom: 2px solid #3b66f5; color: #1e293b; font-weight: 500; }
+        .tab-inactive { color: #64748b; }
+        .tab-inactive:hover { color: #334155; }
+    </style>
+</head>
+<body class="font-sans text-slate-800">
+
+<nav class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <a href="/" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </a>
+            <div>
+                <h1 class="font-semibold text-slate-900 text-sm">审查结果</h1>
+                <p class="text-xs text-slate-500">{{ task.document_name }}</p>
+            </div>
+        </div>
+        <a href="/" class="text-xs font-medium text-slate-600 hover:text-primary-600">返回首页</a>
+    </div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-6 py-8">
+    {% if task.status == 'pending' or task.status == 'running' %}
+    <div class="card p-12 text-center">
+        <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-primary-50 flex items-center justify-center">
+            <svg class="w-6 h-6 text-primary-600 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        </div>
+        <h2 class="font-semibold text-slate-900 text-lg">正在审查中</h2>
+        <p class="text-sm text-slate-500 mt-1">请稍候，正在分析文档合规性</p>
+    </div>
+
+    {% elif task.status == 'failed' %}
+    <div class="card p-12 text-center">
+        <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </div>
+        <h2 class="font-semibold text-slate-900 text-lg">审查失败</h2>
+        <p class="text-sm text-slate-500 mt-1 mb-6">{{ task.error or '未知错误' }}</p>
+        <a href="/" class="inline-flex items-center justify-center px-5 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800">重新审查</a>
+    </div>
+
+    {% elif task.status == 'completed' and report %}
+
+    <!-- Top Stats Row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="card p-5">
+            <p class="text-xs text-slate-500 mb-1">高风险</p>
+            <p class="text-3xl font-bold text-risk-high">{{ risk_stats['高风险'] }}</p>
+        </div>
+        <div class="card p-5">
+            <p class="text-xs text-slate-500 mb-1">中风险</p>
+            <p class="text-3xl font-bold text-risk-medium">{{ risk_stats['中风险'] }}</p>
+        </div>
+        <div class="card p-5">
+            <p class="text-xs text-slate-500 mb-1">建议优化</p>
+            <p class="text-3xl font-bold text-risk-low">{{ risk_stats['建议优化'] }}</p>
+        </div>
+        <div class="card p-5">
+            <p class="text-xs text-slate-500 mb-1">总发现数</p>
+            <p class="text-3xl font-bold text-slate-800">{{ items|length }}</p>
+        </div>
+    </div>
+
+    <!-- Overview & Paths -->
+    <div class="card p-6 mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+            <div>
+                <h2 class="font-semibold text-slate-900 text-lg">审查概览</h2>
+                <p class="text-sm text-slate-500 mt-0.5">{{ report.review_scope or '数据合规相关文件审查' }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200">{{ report.document_type or '未知类型' }}</span>
+                {% if report.auto_recheck_triggered %}
+                <span class="px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 text-xs font-medium border border-amber-200">已触发自动复核</span>
+                {% endif %}
+            </div>
+        </div>
+        {% if report.auto_recheck_summary %}
+        <div class="mb-4 text-sm text-slate-600 bg-slate-50 rounded-lg px-4 py-2.5 border border-slate-100">
+            {{ report.auto_recheck_summary }}
+        </div>
+        {% endif %}
+        <div>
+            <p class="text-xs text-slate-500 mb-2">已执行的审查路径</p>
+            <div class="flex flex-wrap gap-2">
+                {% for path in report.selected_review_paths %}
+                <span class="px-2 py-1 rounded-md bg-primary-50 text-primary-700 text-xs border border-primary-100">{{ path.name if path.name is defined else path }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Clusters -->
+    {% if report.risk_clusters %}
+    <div class="card p-6 mb-6">
+        <h2 class="font-semibold text-slate-900 text-lg mb-4">风险聚类</h2>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for cluster in report.risk_clusters %}
+            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-medium text-slate-800 text-sm">{{ cluster.theme_name }}</h3>
+                    <span class="text-lg font-bold text-slate-900">{{ cluster.item_count }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    {% if cluster.high_risk_count > 0 %}<span class="px-1.5 py-0.5 rounded bg-red-100 text-red-700">{{ cluster.high_risk_count }} 高</span>{% endif %}
+                    {% if cluster.medium_risk_count > 0 %}<span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">{{ cluster.medium_risk_count }} 中</span>{% endif %}
+                    {% if cluster.advisory_count > 0 %}<span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">{{ cluster.advisory_count }} 建议</span>{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Risk Details -->
+    <div class="card p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-semibold text-slate-900 text-lg">风险详情</h2>
+            <span class="text-xs text-slate-500">共 {{ items|length }} 项</span>
+        </div>
+        <div class="divide-y divide-slate-100">
+            {% for item in items %}
+            <div class="py-4">
+                <button class="accordion-trigger w-full text-left flex items-start justify-between gap-3" data-index="{{ loop.index }}">
+                    <div class="flex items-start gap-3 flex-1">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold whitespace-nowrap
+                            {% if item.risk_level == '高风险' %}risk-high{% elif item.risk_level == '中风险' %}risk-medium{% elif item.risk_level == '建议优化' %}risk-low{% else %}risk-none{% endif %}">
+                            {{ item.risk_level }}
+                        </span>
+                        <div class="flex-1">
+                            <h3 class="font-medium text-slate-900 text-sm">{{ item.risk_point }}</h3>
+                            <p class="text-xs text-slate-500 mt-0.5 line-clamp-2">{{ item.reason[:120] }}{% if item.reason|length > 120 %}...{% endif %}</p>
+                        </div>
+                    </div>
+                    <svg class="accordion-icon w-4 h-4 text-slate-400 flex-shrink-0 mt-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div class="accordion-content mt-3" id="content-{{ loop.index }}">
+                    <div class="bg-slate-50 rounded-xl p-4 space-y-4 text-sm">
+                        {% if item.theme_name %}
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-slate-500">所属主题</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-700">{{ item.theme_name }}</span>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h4 class="text-xs font-semibold text-slate-700 mb-1">原因分析</h4>
+                            <p class="text-slate-600 leading-relaxed">{{ item.reason }}</p>
+                        </div>
+                        {% if item.legal_basis %}
+                        <div>
+                            <h4 class="text-xs font-semibold text-slate-700 mb-1">法规依据</h4>
+                            <p class="text-slate-600">{{ item.legal_basis }}</p>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h4 class="text-xs font-semibold text-slate-700 mb-1">修改建议</h4>
+                            <p class="text-slate-600 leading-relaxed">{{ item.suggestion }}</p>
+                        </div>
+                        {% if item.evidence %}
+                        <div>
+                            <h4 class="text-xs font-semibold text-slate-700 mb-2">证据片段</h4>
+                            <div class="space-y-2">
+                                {% for ev in item.evidence %}
+                                <blockquote class="border-l-2 border-primary-500 pl-3 py-1 bg-white rounded-r-md text-slate-600 italic text-xs">"{{ ev }}"</blockquote>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if item.auto_recheck %}
+                        <div class="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <span class="text-xs font-medium">{{ item.auto_recheck_status or '已触发自动复核' }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Remediation Tasks -->
+    {% if remediation and remediation.tasks %}
+    <div class="card p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-semibold text-slate-900 text-lg">整改任务清单</h2>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="px-2 py-0.5 rounded bg-red-100 text-red-700 font-medium">P1: {{ remediation.priority_counts.P1 }}</span>
+                <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">P2: {{ remediation.priority_counts.P2 }}</span>
+                <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium">P3: {{ remediation.priority_counts.P3 }}</span>
+            </div>
+        </div>
+        <div class="space-y-3">
+            {% for t in remediation.tasks %}
+            <div class="border border-slate-200 rounded-xl p-4 hover:border-primary-200 transition-colors">
+                <div class="flex items-start justify-between gap-3 mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase
+                            {% if t.priority == 'P1' %}bg-red-100 text-red-700{% elif t.priority == 'P2' %}bg-amber-100 text-amber-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ t.priority }}</span>
+                        <h3 class="font-medium text-slate-900 text-sm">{{ t.title }}</h3>
+                    </div>
+                    <span class="text-xs text-slate-500 whitespace-nowrap">{{ t.owner_hint }}</span>
+                </div>
+                <p class="text-xs text-slate-600 mb-3">{{ t.objective }}</p>
+                <div class="grid md:grid-cols-2 gap-3 text-xs">
+                    <div class="bg-slate-50 rounded-lg p-3">
+                        <p class="font-medium text-slate-700 mb-1">建议动作</p>
+                        <ul class="list-disc list-inside text-slate-600 space-y-0.5">
+                            {% for action in t.suggested_actions %}
+                            <li>{{ action }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="bg-slate-50 rounded-lg p-3">
+                        <p class="font-medium text-slate-700 mb-1">需补充证据</p>
+                        <ul class="list-disc list-inside text-slate-600 space-y-0.5">
+                            {% for ev in t.required_evidence %}
+                            <li>{{ ev }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% if t.matched_scenarios %}
+                <div class="mt-3 flex items-center gap-2 flex-wrap">
+                    <span class="text-[11px] text-slate-500">匹配场景:</span>
+                    {% for s in t.matched_scenarios %}
+                    <span class="px-2 py-0.5 rounded-full bg-primary-50 text-primary-700 text-[10px] border border-primary-100">{{ s }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Evidence Checklist -->
+    {% if evidence and evidence.checklist %}
+    <div class="card p-6 mb-6">
+        <h2 class="font-semibold text-slate-900 text-lg mb-4">证据清单</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 text-slate-600 text-xs">
+                    <tr>
+                        <th class="text-left font-medium px-3 py-2 rounded-l-lg">风险点</th>
+                        <th class="text-left font-medium px-3 py-2">责任方</th>
+                        <th class="text-left font-medium px-3 py-2 rounded-r-lg">需补充材料</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for row in evidence.checklist %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-3 py-3 align-top">
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold
+                                    {% if row.risk_level == '高风险' %}risk-high{% elif row.risk_level == '中风险' %}risk-medium{% else %}risk-low{% endif %}">{{ row.risk_level }}</span>
+                                <span class="text-slate-800">{{ row.risk_point }}</span>
+                            </div>
+                        </td>
+                        <td class="px-3 py-3 align-top text-slate-600 whitespace-nowrap">{{ row.owner_hint }}</td>
+                        <td class="px-3 py-3 align-top text-slate-600">
+                            <ul class="list-disc list-inside space-y-0.5">
+                                {% for ev_item in row.evidence_items %}
+                                <li>{{ ev_item }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% if row.why_needed %}
+                            <p class="text-[11px] text-slate-400 mt-1">{{ row.why_needed }}</p>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Special Review Packs -->
+    {% if (sdk_pack and sdk_pack.enabled) or (cross_border_pack and cross_border_pack.enabled) or (privacy_pack and privacy_pack.enabled) %}
+    <div class="card p-6 mb-6">
+        <h2 class="font-semibold text-slate-900 text-lg mb-4">专项审查包</h2>
+
+        <!-- Tabs -->
+        <div class="flex items-center gap-4 border-b border-slate-200 mb-4" id="packTabs">
+            {% if sdk_pack and sdk_pack.enabled %}
+            <button class="pack-tab pb-2 text-sm tab-active" data-tab="sdk">SDK 与合作方</button>
+            {% endif %}
+            {% if cross_border_pack and cross_border_pack.enabled %}
+            <button class="pack-tab pb-2 text-sm {% if not (sdk_pack and sdk_pack.enabled) %}tab-active{% else %}tab-inactive{% endif %}" data-tab="cross">数据出境</button>
+            {% endif %}
+            {% if privacy_pack and privacy_pack.enabled %}
+            <button class="pack-tab pb-2 text-sm {% if not ((sdk_pack and sdk_pack.enabled) or (cross_border_pack and cross_border_pack.enabled)) %}tab-active{% else %}tab-inactive{% endif %}" data-tab="privacy">隐私文档整改</button>
+            {% endif %}
+        </div>
+
+        <!-- SDK Panel -->
+        {% if sdk_pack and sdk_pack.enabled %}
+        <div id="panel-sdk" class="pack-panel">
+            <p class="text-xs text-slate-500 mb-3">命中场景：{{ sdk_pack.scenario_name }}</p>
+            <div class="grid md:grid-cols-2 gap-4">
+                {% for section in sdk_pack.sections %}
+                <div class="border border-slate-200 rounded-xl p-4">
+                    <h3 class="font-medium text-slate-900 text-sm mb-2">{{ section.title }}</h3>
+                    <ul class="space-y-1.5">
+                        {% for req in section.required_items %}
+                        <li class="flex items-start gap-2 text-xs text-slate-600">
+                            <span class="w-4 h-4 rounded border border-slate-300 flex-shrink-0 mt-0.5"></span>
+                            <span>{{ req }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Cross Border Panel -->
+        {% if cross_border_pack and cross_border_pack.enabled %}
+        <div id="panel-cross" class="pack-panel {% if sdk_pack and sdk_pack.enabled %}hidden{% endif %}">
+            <p class="text-xs text-slate-500 mb-3">命中场景：{{ cross_border_pack.scenario_name }}</p>
+            <div class="grid md:grid-cols-2 gap-4">
+                {% for section in cross_border_pack.sections %}
+                <div class="border border-slate-200 rounded-xl p-4">
+                    <h3 class="font-medium text-slate-900 text-sm mb-2">{{ section.title }}</h3>
+                    <ul class="space-y-1.5">
+                        {% for req in section.required_items %}
+                        <li class="flex items-start gap-2 text-xs text-slate-600">
+                            <span class="w-4 h-4 rounded border border-slate-300 flex-shrink-0 mt-0.5"></span>
+                            <span>{{ req }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Privacy Panel -->
+        {% if privacy_pack and privacy_pack.enabled %}
+        <div id="panel-privacy" class="pack-panel {% if (sdk_pack and sdk_pack.enabled) or (cross_border_pack and cross_border_pack.enabled) %}hidden{% endif %}">
+            <p class="text-xs text-slate-500 mb-3">命中场景：{{ privacy_pack.scenario_name }}</p>
+            <div class="grid md:grid-cols-2 gap-4">
+                {% for section in privacy_pack.sections %}
+                <div class="border border-slate-200 rounded-xl p-4">
+                    <h3 class="font-medium text-slate-900 text-sm mb-2">{{ section.title }}</h3>
+                    <ul class="space-y-1.5">
+                        {% for req in section.required_items %}
+                        <li class="flex items-start gap-2 text-xs text-slate-600">
+                            <span class="w-4 h-4 rounded border border-slate-300 flex-shrink-0 mt-0.5"></span>
+                            <span>{{ req }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Downloads -->
+    <div class="flex flex-col sm:flex-row gap-3">
+        <a href="/api/download/{{ task.id }}/report" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            下载完整报告 (JSON)
+        </a>
+        <a href="/api/download/{{ task.id }}/remediation" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg btn-primary text-sm font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+            下载整改任务清单
+        </a>
+    </div>
+
+    {% endif %}
+</main>
+
+<footer class="max-w-6xl mx-auto px-6 py-6 text-center">
+    <p class="text-xs text-slate-400">数据合规智能审查系统 · 辅助决策，不替代专业法律判断</p>
+</footer>
+
+<script>
+    // Accordion
+    document.querySelectorAll('.accordion-trigger').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const content = document.getElementById('content-' + btn.dataset.index);
+            const icon = btn.querySelector('.accordion-icon');
+            const isOpen = content.classList.contains('open');
+            // Optional: close others
+            document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('open'));
+            document.querySelectorAll('.accordion-icon').forEach(i => i.style.transform = 'rotate(0deg)');
+            if (!isOpen) {
+                content.classList.add('open');
+                icon.style.transform = 'rotate(180deg)';
+            }
+        });
+    });
+
+    // Special Pack Tabs
+    const tabs = document.querySelectorAll('.pack-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = tab.dataset.tab;
+            tabs.forEach(t => { t.classList.remove('tab-active'); t.classList.add('tab-inactive'); });
+            tab.classList.remove('tab-inactive');
+            tab.classList.add('tab-active');
+            document.querySelectorAll('.pack-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById('panel-' + target).classList.remove('hidden');
+        });
+    });
+</script>
+
+</body>
+</html>

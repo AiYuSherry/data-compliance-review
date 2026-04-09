@@ -1,0 +1,29 @@
+{
+  "path_id": "third_party_sharing_check",
+  "summary": "命中 2 个触发点；关键要素覆盖 3/4；模糊表述 2 处。",
+  "items": [
+    {
+      "risk_point": "第三方共享或委托处理披露可能不足",
+      "risk_level": "建议优化",
+      "legal_basis": "待外部规范数据库补充具体依据",
+      "reason": "触发主题：合作伙伴, 共享；已识别要素：第三方身份或类别, 共享信息范围, 共享目的；待补要素：处理方式或管理要求；模糊表述：合作伙伴, 必要时；证据片段：我们会在必要时与合作伙伴共享相关信息。。",
+      "suggestion": "说明共享方式、委托处理安排及管理要求。",
+      "auto_recheck": false,
+      "evidence": [
+        "我们会在必要时与合作伙伴共享相关信息。"
+      ],
+      "coverage_ratio": 0.75,
+      "trigger_hits": [
+        "合作伙伴",
+        "共享"
+      ],
+      "missing_groups": [
+        "处理方式或管理要求"
+      ],
+      "ambiguity_hits": [
+        "合作伙伴",
+        "必要时"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "document_name": "auto-remediation-v1-demo",
+  "queue_count": 3,
+  "queue": [
+    {
+      "priority": "P2",
+      "theme_name": "披露与权利告知",
+      "risk_point": "重要处理事项披露可能不充分",
+      "risk_level": "中风险",
+      "auto_recheck_status": "自动复核后维持中风险",
+      "decision": "维持",
+      "gap_summary": {
+        "missing_group_count": 2,
+        "ambiguity_count": 2,
+        "evidence_count": 2,
+        "source_count": 1,
+        "corroboration_count": 0
+      },
+      "related_risk_points": [],
+      "next_actions": [
+        "补充关键缺失要素说明",
+        "收窄模糊表述并重新判断"
+      ]
+    },
+    {
+      "priority": "P1",
+      "theme_name": "处理目的与法律基础",
+      "risk_point": "处理目的与信息范围匹配性可能不足",
+      "risk_level": "中风险",
+      "auto_recheck_status": "自动复核后维持中风险（多规则印证）",
+      "decision": "维持",
+      "gap_summary": {
+        "missing_group_count": 2,
+        "ambiguity_count": 1,
+        "evidence_count": 1,
+        "source_count": 1,
+        "corroboration_count": 2
+      },
+      "related_risk_points": [
+        "合法性基础与必要性表达可能不足",
+        "字段、处理目的与法律基础之间的对应关系可能不足"
+      ],
+      "next_actions": [
+        "补充关键缺失要素说明",
+        "结合同主题命中项统一整改"
+      ]
+    },
+    {
+      "priority": "P2",
+      "theme_name": "同意与功能边界",
+      "risk_point": "基于同意的可选功能与基础功能绑定关系可能不清",
+      "risk_level": "中风险",
+      "auto_recheck_status": "自动复核后维持中风险",
+      "decision": "维持",
+      "gap_summary": {
+        "missing_group_count": 3,
+        "ambiguity_count": 1,
+        "evidence_count": 2,
+        "source_count": 1,
+        "corroboration_count": 0
+      },
+      "related_risk_points": [],
+      "next_actions": [
+        "补充关键缺失要素说明"
+      ]
+    }
+  ]
+}

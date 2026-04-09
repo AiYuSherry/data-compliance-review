@@ -1,0 +1,81 @@
+{
+  "document_name": "privacy-remediation-demo",
+  "before_work_dir": "/Users/xiangyang/.openclaw/workspace/output/data-compliance-regression-demo-v2/before",
+  "after_work_dir": "/Users/xiangyang/.openclaw/workspace/output/data-compliance-regression-demo-v2/after",
+  "verdict": "整改总体有效，但有新增问题",
+  "summary": "高风险 0→0，中风险 3→0，P1 任务 2→0。",
+  "before_stats": {
+    "total": 6,
+    "high_risk": 0,
+    "medium_risk": 3,
+    "advisory": 3
+  },
+  "after_stats": {
+    "total": 6,
+    "high_risk": 0,
+    "medium_risk": 0,
+    "advisory": 6
+  },
+  "before_task_priority_counts": {
+    "P1": 2,
+    "P2": 2,
+    "P3": 0
+  },
+  "after_task_priority_counts": {
+    "P1": 0,
+    "P2": 0,
+    "P3": 2
+  },
+  "comparison": {
+    "improved": [
+      {
+        "risk_point": "重要处理事项披露可能不充分",
+        "before_level": "中风险",
+        "after_level": "建议优化",
+        "result": "风险下降"
+      },
+      {
+        "risk_point": "处理目的与信息范围匹配性可能不足",
+        "before_level": "中风险",
+        "after_level": "建议优化",
+        "result": "风险下降"
+      }
+    ],
+    "regressed": [
+      {
+        "risk_point": "保存期限或删除机制表达可能不足",
+        "before_level": "无",
+        "after_level": "建议优化",
+        "result": "新增风险"
+      }
+    ],
+    "unresolved": [
+      {
+        "risk_point": "第三方共享或委托处理披露可能不足",
+        "before_level": "建议优化",
+        "after_level": "建议优化",
+        "result": "风险未下降"
+      },
+      {
+        "risk_point": "合法性基础与必要性表达可能不足",
+        "before_level": "建议优化",
+        "after_level": "建议优化",
+        "result": "风险未下降"
+      },
+      {
+        "risk_point": "字段、处理目的与法律基础之间的对应关系可能不足",
+        "before_level": "建议优化",
+        "after_level": "建议优化",
+        "result": "风险未下降"
+      }
+    ],
+    "resolved": [
+      {
+        "risk_point": "基于同意的可选功能与基础功能绑定关系可能不清",
+        "before_level": "中风险",
+        "after_level": "无",
+        "result": "已消失"
+      }
+    ]
+  }
+}
