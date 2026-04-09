@@ -6,6 +6,11 @@
 
 ## 2026-04-09
 
+### 前端改为蓝白 SaaS 风格（你）
+- 将 `index.html` 与 `result.html` 整体色调改回蓝白 SaaS 风格（Inter + Noto Sans SC、primary-500 `#3b66f5`）
+- 保留优化后的结果页结构：Executive Summary、Sticky 侧边导航、风险详情卡片左右分栏、法规/证据折叠
+- **文件改动**：`data-compliance-web/templates/index.html`、`data-compliance-web/templates/result.html`
+
 ### 前端样式回滚 + 功能保留（你）
 - 将 SaaS 蓝白风格回滚为 original editorial 风格（衬线体、金棕装饰线、灰褐主色）
 - 保留并优化了全部功能模块展示：风险聚类、整改任务、证据清单、专项审查包
