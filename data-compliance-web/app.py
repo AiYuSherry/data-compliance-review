@@ -157,7 +157,8 @@ def run_review_pipeline(task_id, input_path, document_name, is_text=False):
         findings_dir = work_dir / '06_findings'
         findings_dir.mkdir(parents=True, exist_ok=True)
 
-        for i, path_id in enumerate(selected_paths):
+        for i, path_obj in enumerate(selected_paths):
+            path_id = path_obj.get('id') if isinstance(path_obj, dict) else path_obj
             path_name = {
                 'disclosure_check': '披露完整性检查',
                 'purpose_scope_check': '目的与范围检查',
