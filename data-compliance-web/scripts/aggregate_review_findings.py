@@ -22,6 +22,18 @@ def merge_text(a: str, b: str) -> str:
     return a + '；' + b
 
 
+def merge_list(a: list | None, b: list | None) -> list:
+    out = []
+    seen = set()
+    for value in (a or []) + (b or []):
+        key = json.dumps(value, ensure_ascii=False, sort_keys=True) if isinstance(value, (dict, list)) else str(value)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(value)
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--skeleton', required=True)
@@ -58,6 +70,11 @@ def main() -> int:
                 current['reason'] = merge_text(current.get('reason', ''), item.get('reason', ''))
                 current['suggestion'] = merge_text(current.get('suggestion', ''), item.get('suggestion', ''))
                 current['auto_recheck'] = current.get('auto_recheck', False) or item.get('auto_recheck', False)
+                current['evidence'] = merge_list(current.get('evidence'), item.get('evidence'))
+                current['trigger_hits'] = merge_list(current.get('trigger_hits'), item.get('trigger_hits'))
+                current['missing_groups'] = merge_list(current.get('missing_groups'), item.get('missing_groups'))
+                current['ambiguity_hits'] = merge_list(current.get('ambiguity_hits'), item.get('ambiguity_hits'))
+                current['source_sections'] = merge_list(current.get('source_sections'), item.get('source_sections'))
                 if path_id not in current['path_ids']:
                     current['path_ids'].append(path_id)
             if item.get('auto_recheck'):

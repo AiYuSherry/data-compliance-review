@@ -4,6 +4,16 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import importlib.util
+
+
+def load_preprocess_module():
+    module_path = Path(__file__).resolve().parent / 'preprocess_input.py'
+    spec = importlib.util.spec_from_file_location('preprocess_input_for_classify', module_path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
 
 
 def load_config(path: Path) -> dict:
@@ -12,7 +22,8 @@ def load_config(path: Path) -> dict:
 
 def read_input(file_path: str, text: str) -> str:
     if file_path:
-        return Path(file_path).read_text(encoding='utf-8')
+        preprocess = load_preprocess_module()
+        return preprocess.read_text(file_path, text)
     return text
 
 

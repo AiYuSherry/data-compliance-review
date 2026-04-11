@@ -383,6 +383,59 @@ def find_relevant_snippets(text: str, trigger_terms: list[str], extra_terms: lis
     return snippets
 
 
+def infer_segment_label(segment: str, index: int) -> str:
+    first_line = segment.strip().splitlines()[0].strip() if segment.strip() else ''
+    patterns = [
+        r'^(第[一二三四五六七八九十百千万零两0-9]+条(?:\s*[^，。；\n]{0,20})?)',
+        r'^(第[一二三四五六七八九十百千万零两0-9]+款(?:\s*[^，。；\n]{0,20})?)',
+        r'^([一二三四五六七八九十]+[、.．][^。；\n]{0,24})',
+        r'^([0-9]+[、.．][^。；\n]{0,24})',
+    ]
+    for pattern in patterns:
+        match = re.match(pattern, first_line)
+        if match:
+            return match.group(1)
+    return first_line[:24] if first_line else f'第{index + 1}段'
+
+
+def locate_source_sections(segment_contexts: list[dict], item: dict, limit: int = 3) -> list[dict]:
+    evidence = item.get('evidence', []) or []
+    trigger_hits = item.get('trigger_hits', []) or []
+    candidates: list[tuple[int, dict]] = []
+    for idx, context in enumerate(segment_contexts):
+        segment = context.get('text', '')
+        score = 0
+        for ev in evidence:
+            if ev and ev in segment:
+                score += 10
+        for hit in trigger_hits:
+            if hit and hit in segment:
+                score += 2
+        if score <= 0:
+            continue
+        candidates.append((
+            score,
+            {
+                'page': context.get('page'),
+                'segment_index': context.get('segment_index', idx + 1),
+                'label': context.get('label') or infer_segment_label(segment, idx),
+                'snippet': segment[:180].replace('\n', ' ').strip(),
+            }
+        ))
+
+    candidates.sort(key=lambda pair: (-pair[0], pair[1]['segment_index']))
+    result: list[dict] = []
+    seen: set[int] = set()
+    for _, payload in candidates:
+        if payload['segment_index'] in seen:
+            continue
+        seen.add(payload['segment_index'])
+        result.append(payload)
+        if len(result) >= limit:
+            break
+    return result
+
+
 def group_coverage(text: str, groups: list[dict]) -> tuple[list[dict], list[dict]]:
     present = []
     missing = []
@@ -904,12 +957,18 @@ def main() -> int:
     tasks = load_json(Path(args.tasks))
     text = preprocessed.get('normalized_text', '')
     segments = preprocessed.get('segments', [])
+    segment_contexts = preprocessed.get('segment_contexts') or [
+        {'page': None, 'segment_index': idx + 1, 'label': infer_segment_label(seg, idx), 'text': seg}
+        for idx, seg in enumerate(segments)
+    ]
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     outputs = []
     for task in tasks.get('tasks', []):
         finding = assess_one(task['path_id'], text, segments)
+        for item in finding.get('items', []):
+            item['source_sections'] = locate_source_sections(segment_contexts, item)
         path = out_dir / f"{task['path_id']}.json"
         path.write_text(json.dumps(finding, ensure_ascii=False, indent=2), encoding='utf-8')
         outputs.append(str(path))

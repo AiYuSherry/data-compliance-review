@@ -32,9 +32,12 @@ def main() -> int:
                     item['legal_basis'] = ref.get('legal_basis', item.get('legal_basis', ''))
                 note = ref.get('reference_note', '').strip()
                 if note:
-                    old_reason = item.get('reason', '')
-                    if note not in old_reason:
-                        item['reason'] = (old_reason + ' ' + note).strip()
+                    item['legal_basis_detail'] = note
+                    item['primary_legal_source'] = {
+                        'title': ref.get('legal_basis', item.get('legal_basis', '')),
+                        'detail': note,
+                        'source_id': ref.get('source_id', ''),
+                    }
                 if ref.get('source_id'):
                     item.setdefault('sources', [])
                     if ref['source_id'] not in item['sources']:

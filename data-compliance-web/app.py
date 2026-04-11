@@ -70,6 +70,22 @@ def load_json_if_exists(path_str):
     return json.loads(path.read_text(encoding='utf-8'))
 
 
+def derive_document_name(raw_name: str, input_text: str, uploaded_file) -> str:
+    name = (raw_name or '').strip()
+    if name:
+        return name
+
+    if uploaded_file and getattr(uploaded_file, 'filename', ''):
+        return Path(uploaded_file.filename).stem.strip() or '未命名文档'
+
+    text = (input_text or '').strip()
+    if text:
+        compact = ' '.join(text.split())
+        return (compact[:20] + '...') if len(compact) > 20 else compact
+
+    return '未命名文档'
+
+
 def run_review_pipeline(task_id, input_path, document_name, is_text=False):
     """
     运行审查流水线，并通过SSE推送进度
@@ -267,6 +283,7 @@ def run_review_pipeline(task_id, input_path, document_name, is_text=False):
         auto_rechecked_report = work_dir / '07_report_auto_rechecked.json'
         auto_recheck_queue = work_dir / '07_auto_recheck_queue.json'
         risk_clusters = work_dir / '07_risk_clusters.json'
+        bundle_dir = work_dir / '08_bundle'
         subprocess.run([
             'python3', str(SCRIPTS_DIR / 'auto_recheck_report.py'),
             '--report', str(report_for_bundle),
@@ -274,6 +291,12 @@ def run_review_pipeline(task_id, input_path, document_name, is_text=False):
             '--queue-output', str(auto_recheck_queue),
             '--cluster-output', str(risk_clusters)
         ], check=True, capture_output=True)
+        bundle_result = subprocess.run([
+            'python3', str(SCRIPTS_DIR / 'render_report_bundle.py'),
+            str(auto_rechecked_report),
+            '--out-dir', str(bundle_dir)
+        ], capture_output=True, text=True, check=True)
+        bundle = json.loads(bundle_result.stdout)
 
         # 步骤9: 风险聚类
         update_progress(9, '正在分析风险聚类...')
@@ -352,6 +375,7 @@ def run_review_pipeline(task_id, input_path, document_name, is_text=False):
         task['completed_at'] = datetime.now().isoformat()
         task['result'] = {
             'report': str(auto_rechecked_report),
+            'report_markdown': bundle.get('markdown', ''),
             'remediation': str(remediation_tasks),
             'evidence': str(evidence_checklist),
             'sdk_pack': str(sdk_partner_pack),
@@ -389,11 +413,13 @@ def index():
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     """处理文件上传或文本输入"""
-    document_name = request.form.get('document_name', '').strip()
     input_text = request.form.get('input_text', '').strip()
-
-    if not document_name:
-        return jsonify({'error': '请输入文档名称'}), 400
+    uploaded_file = request.files.get('file')
+    document_name = derive_document_name(
+        request.form.get('document_name', ''),
+        input_text,
+        uploaded_file,
+    )
 
     task_id = str(uuid.uuid4())[:8]
 
@@ -417,9 +443,9 @@ def upload_file():
 
         return jsonify({'task_id': task_id})
 
-    elif 'file' in request.files:
+    elif uploaded_file is not None:
         # 文件上传
-        file = request.files['file']
+        file = uploaded_file
         if file.filename == '':
             return jsonify({'error': '请选择文件'}), 400
 
@@ -565,6 +591,7 @@ def download_file(task_id, file_type):
 
     file_mapping = {
         'report': ('report', '.json'),
+        'report_md': ('report_markdown', '.md'),
         'remediation': ('remediation', '.json'),
         'evidence': ('evidence', '.json'),
         'sdk_pack': ('sdk_pack', '.json'),
@@ -625,8 +652,18 @@ def dev_mock_result():
         'id': 'dev-mock',
         'document_name': report.get('document_name', 'Demo 文档'),
         'status': 'completed',
-        'created_at': datetime.now().isoformat()
+        'created_at': datetime.now().isoformat(),
+        'result': {
+            'report': str(report_path),
+            'report_markdown': str(demo_dir / 'report.md'),
+            'remediation': str(demo_dir / 'remediation.json'),
+            'evidence': str(demo_dir / 'evidence.json'),
+            'sdk_pack': str(demo_dir / 'sdk_partner.json'),
+            'cross_border_pack': str(demo_dir / 'cross_border.json'),
+            'privacy_pack': str(demo_dir / 'privacy.json'),
+        }
     }
+    tasks['dev-mock'] = task
 
     return render_template('result.html', task=task, report=report,
                           risk_stats=risk_stats, items=sorted_items, **extra)

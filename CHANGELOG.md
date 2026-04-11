@@ -4,8 +4,23 @@
 
 ---
 
+## 2026-04-11
+
+### 21:10 CST — 向阳 — 修复下载整改清单失败，并继续压缩报告噪音
+- 修复 `/dev/result` 场景下点击下载整改清单返回“任务不存在”的问题：将 `dev-mock` 结果注册到运行时任务表，确保下载链路与正式任务一致。
+- 上传链继续补齐二进制文档处理：`preprocess_input.py` 与 `classify_document_type.py` 均已支持 PDF / DOCX / DOC，不再把二进制文件当 UTF-8 文本硬读。
+- 结果页继续调整为更贴近法务阅读的顺序：弱化“问题位置”展示，优先突出问题内容、风险说明、主法规依据与条款要点，并将补充规范索引与系统判断详情后置。
+- 报告下载补齐 Markdown 输出，方便用户直接阅读或转存。
+- 新增仓库根 `README.md`，仅保留本轮最新更新内容与当前状态说明。
+- **文件改动**：`data-compliance-web/app.py`、`data-compliance-web/scripts/preprocess_input.py`、`data-compliance-web/scripts/classify_document_type.py`、`data-compliance-web/scripts/run_rule_based_review.py`、`data-compliance-web/scripts/aggregate_review_findings.py`、`data-compliance-web/scripts/render_risk_report.py`、`data-compliance-web/scripts/apply_external_norm_mapping.py`、`data-compliance-web/templates/result.html`、`projects/data-compliance-ai-project-kit/scripts/preprocess_input.py`、`projects/data-compliance-ai-project-kit/scripts/classify_document_type.py`、`projects/data-compliance-ai-project-kit/scripts/apply_external_norm_mapping.py`、`projects/data-compliance-ai-project-kit/scripts/enrich_report_with_regulation_db.py`、`README.md`、`CHANGELOG.md`
+
 ## 2026-04-09
 
+### 20:24 CST — 向阳 — 调整更新日志策略：旧日志只追加，不覆盖
+- 将 `CHANGELOG.md` 设为安全上传中的特殊合并文件：若本地与远端都新增了日志内容，上传时会自动合并双方日志。
+- 合并逻辑保留旧日志与历史日期分组，并优先保留本地新增条目，再补入远端新增条目，避免覆盖旧日志。
+- 新增测试覆盖 `CHANGELOG.md` 双边更新场景，并更新 `UPSTREAM.md` 说明 `CHANGELOG-MERGE` 状态与日志追加规则。
+- **文件改动**：`projects/data-compliance-ai-project-kit/scripts/safe_upload_default_upstream.py`、`projects/data-compliance-ai-project-kit/tests/test_safe_upload_default_upstream.py`、`projects/data-compliance-ai-project-kit/UPSTREAM.md`、`CHANGELOG.md`
 ### 20:19 CST — 向阳 — 将同步基线改为本地专用，避免团队互相污染状态
 - 将安全上传基线状态文件位置从项目目录内改为本地 `.openclaw/data-compliance-review/default-sync-state.json`，不再进入 GitHub 仓库。
 - 更新 `UPSTREAM.md`：明确团队成员同步最新代码后即可共用脚本，但各自需先运行一次 `init` 建立本地基线。

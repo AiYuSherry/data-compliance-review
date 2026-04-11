@@ -32,22 +32,59 @@ def render(data: dict) -> str:
     lines.append("## 审查结论摘要")
     lines.append(data.get("summary", ""))
     lines.append("")
+
+    if data.get('local_regulation_db'):
+        regdb = data.get('local_regulation_db', {})
+        lines.append("## 法规库增强")
+        lines.append(f"- 状态：{'已启用' if regdb.get('enabled') else '未启用'}")
+        lines.append(f"- 命中项数：{regdb.get('matched_items', 0)}")
+        lines.append(f"- 未命中项数：{regdb.get('unmatched_items', 0)}")
+        lines.append(f"- 可检索规范数：{regdb.get('searchable_documents', 0)} / {regdb.get('total_documents', 0)}")
+        lines.append("")
+
     lines.append("## 风险明细")
-    lines.append("| 风险点 | 风险等级 | 法规依据 | 判断原因 | 修改建议 | 来源路径 | 自动复核状态 | 自动复核结论 |")
-    lines.append("|---|---|---|---|---|---|---|---|")
     for item in data.get("items", []):
-        lines.append(
-            "| {risk_point} | {risk_level} | {legal_basis} | {reason} | {suggestion} | {path_ids} | {recheck} | {decision} |".format(
-                risk_point=item.get("risk_point", ""),
-                risk_level=item.get("risk_level", ""),
-                legal_basis=item.get("legal_basis", ""),
-                reason=item.get("reason", ""),
-                suggestion=item.get("suggestion", ""),
-                path_ids=", ".join(item.get("path_ids", [])),
-                recheck=item.get("auto_recheck_status", "未触发"),
-                decision=item.get("auto_recheck_decision", "未触发"),
-            )
-        )
+        lines.append(f"### [{item.get('risk_level', '')}] {item.get('risk_point', '')}")
+        if item.get("theme_name"):
+            lines.append(f"- 风险主题：{item.get('theme_name')}")
+        lines.append(f"- 主法规依据：{item.get('legal_basis', '')}")
+        if item.get("legal_basis_detail"):
+            lines.append(f"- 条款要点：{item.get('legal_basis_detail')}")
+        if item.get("source_sections"):
+            refs = [
+                f"{'第' + str(section.get('page')) + '页 · ' if section.get('page') else ''}{section.get('label', '')}（第{section.get('segment_index')}段）"
+                for section in item.get("source_sections", [])
+            ]
+            lines.append(f"- 文档定位：{'；'.join(refs)}")
+        if item.get("missing_groups"):
+            lines.append(f"- 主要风险：该处未明确 {', '.join(item.get('missing_groups', []))}。")
+        elif item.get("ambiguity_hits"):
+            lines.append(f"- 主要风险：该处存在“{', '.join(item.get('ambiguity_hits', []))}”等模糊表述。")
+        else:
+            lines.append(f"- 主要风险：存在 {item.get('risk_point', '')}。")
+        lines.append(f"- 修改建议：{item.get('suggestion', '')}")
+        if item.get("source_sections"):
+            lines.append("- 问题内容：")
+            for section in item.get("source_sections", [])[:2]:
+                lines.append(f"  - {section.get('snippet', '')}")
+        elif item.get("evidence"):
+            lines.append("- 问题内容：")
+            for ev in item.get("evidence", [])[:2]:
+                lines.append(f"  - {ev}")
+        if item.get("supporting_regulations"):
+            lines.append("- 补充规范索引：")
+            for reg in item.get("supporting_regulations", []):
+                title = reg.get("title", "")
+                code = reg.get("standard_code", "")
+                clause_refs = "、".join(reg.get("clause_references", []) or [])
+                header = f"{code} {title}".strip()
+                if clause_refs:
+                    header += f"（{clause_refs}）"
+                lines.append(f"  - {header}")
+                if reg.get("snippet"):
+                    lines.append(f"    - 片段：{reg.get('snippet')}")
+        lines.append(f"- 自动复核：{item.get('auto_recheck_status', '未触发')} / {item.get('auto_recheck_decision', '未触发')}")
+        lines.append("")
     if data.get('notes'):
         lines.append("")
         lines.append("## 过程备注")

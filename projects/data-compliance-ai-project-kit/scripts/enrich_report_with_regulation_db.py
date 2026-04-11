@@ -87,6 +87,14 @@ def unique_keep_order(values: list[str]) -> list[str]:
     return result
 
 
+def extract_clause_references(text: str) -> list[str]:
+    matches = re.findall(
+        r"第[一二三四五六七八九十百千万零两0-9]+条(?:第[一二三四五六七八九十百千万零两0-9]+款)?",
+        text or "",
+    )
+    return unique_keep_order(matches)[:3]
+
+
 def derive_keywords(item: dict) -> list[str]:
     combined = " ".join(
         [
@@ -238,6 +246,7 @@ def search_regulations(conn: sqlite3.Connection, item: dict, keywords: list[str]
             "doc_category": row["doc_category"] or "",
             "effect_level": row["effect_level"] or "",
             "relative_path": row["relative_path"],
+            "clause_references": extract_clause_references(row["chunk_text"] or ""),
             "match_keywords": matched_keywords,
             "match_score": score,
             "snippet": build_snippet(row["chunk_text"] or "", matched_keywords),

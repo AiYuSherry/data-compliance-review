@@ -110,6 +110,7 @@
         </nav>
         <div class="mt-8 pt-6 border-t border-slate-200">
             <a href="/api/download/{{ task.id }}/report" class="block text-sm text-slate-600 hover:text-primary-600 mb-2">下载完整报告 ↓</a>
+            <a href="/api/download/{{ task.id }}/report_md" class="block text-sm text-slate-600 hover:text-primary-600 mb-2">下载完整报告 Markdown ↓</a>
             <a href="/api/download/{{ task.id }}/remediation" class="block text-sm text-slate-600 hover:text-primary-600">下载整改清单 ↓</a>
         </div>
     </aside>
@@ -219,7 +220,34 @@
                                     {% endif %}
                                 </div>
                                 <h3 class="font-semibold text-slate-900 text-base mb-2">{{ item.risk_point }}</h3>
-                                <p class="text-sm text-slate-600 leading-relaxed">{{ item.reason }}</p>
+                                <div class="space-y-2 text-sm">
+                                    <div>
+                                        <p class="text-[11px] text-slate-500 mb-1 font-medium">问题内容</p>
+                                        <div class="space-y-1.5">
+                                            {% if item.source_sections %}
+                                                {% for section in item.source_sections[:2] %}
+                                                <blockquote class="text-slate-700 border-l-2 border-primary-500 pl-2.5 py-0.5 text-xs bg-white rounded-r">{{ section.snippet }}</blockquote>
+                                                {% endfor %}
+                                            {% elif item.evidence %}
+                                                {% for ev in item.evidence[:2] %}
+                                                <blockquote class="text-slate-700 border-l-2 border-primary-500 pl-2.5 py-0.5 text-xs bg-white rounded-r">{{ ev }}</blockquote>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-[11px] text-slate-500 mb-1 font-medium">风险说明</p>
+                                        <p class="text-slate-700 leading-relaxed">
+                                            {% if item.missing_groups %}
+                                                该处未明确 {{ item.missing_groups | join('、') }}，存在 {{ item.risk_point }}。
+                                            {% elif item.ambiguity_hits %}
+                                                该处存在“{{ item.ambiguity_hits | join('、') }}”等模糊表述，存在 {{ item.risk_point }}。
+                                            {% else %}
+                                                该处存在 {{ item.risk_point }}。
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                             <!-- Right: Action suggestion (highlighted) -->
                             <div class="md:col-span-7 bg-slate-50 p-4 rounded-lg border border-slate-100">
@@ -232,7 +260,7 @@
                         <div class="mt-4 pt-4 border-t border-slate-100">
                             <button class="fold-toggle text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1 transition-colors" data-target="fold-{{ loop.index }}">
                                 <svg class="w-3.5 h-3.5 fold-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                <span>查看法规依据与证据片段</span>
+                                <span>查看法规依据与定位详情</span>
                             </button>
                             <div class="fold-content mt-3" id="fold-{{ loop.index }}">
                                 <div class="grid md:grid-cols-2 gap-4 text-sm">
@@ -240,11 +268,14 @@
                                     <div>
                                         <p class="text-[11px] text-slate-500 mb-1 font-medium">法规依据</p>
                                         <p class="text-slate-700">{{ item.legal_basis }}</p>
+                                        {% if item.legal_basis_detail %}
+                                        <p class="text-xs text-slate-600 mt-1 leading-relaxed">{{ item.legal_basis_detail }}</p>
+                                        {% endif %}
                                     </div>
                                     {% endif %}
                                     {% if item.supporting_regulations %}
                                     <div class="md:col-span-2">
-                                        <p class="text-[11px] text-slate-500 mb-2 font-medium">法规库命中</p>
+                                        <p class="text-[11px] text-slate-500 mb-2 font-medium">补充规范索引</p>
                                         <div class="space-y-2">
                                             {% for reg in item.supporting_regulations %}
                                             <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">
@@ -256,6 +287,7 @@
                                                 </div>
                                                 <p class="text-[11px] text-slate-500">
                                                     {{ reg.effect_level or reg.doc_category }}
+                                                    {% if reg.clause_references %} · 条款：{{ reg.clause_references | join('、') }}{% endif %}
                                                     {% if reg.match_keywords %} · 命中词：{{ reg.match_keywords | join('、') }}{% endif %}
                                                 </p>
                                                 {% if reg.snippet %}
@@ -268,7 +300,7 @@
                                     {% endif %}
                                     {% if item.evidence %}
                                     <div>
-                                        <p class="text-[11px] text-slate-500 mb-1 font-medium">证据片段</p>
+                                        <p class="text-[11px] text-slate-500 mb-1 font-medium">补充证据片段</p>
                                         <div class="space-y-1.5">
                                             {% for ev in item.evidence %}
                                             <blockquote class="text-slate-600 italic border-l-2 border-primary-500 pl-2.5 py-0.5 text-xs bg-white rounded-r">"{{ ev }}"</blockquote>
@@ -280,6 +312,12 @@
                                     <div class="md:col-span-2 flex items-center gap-2 text-slate-700 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                         <span class="font-medium">{{ item.auto_recheck_status or '已触发自动复核' }}</span>
+                                    </div>
+                                    {% endif %}
+                                    {% if item.reason %}
+                                    <div class="md:col-span-2">
+                                        <p class="text-[11px] text-slate-500 mb-1 font-medium">系统判断详情</p>
+                                        <p class="text-xs text-slate-600 leading-relaxed">{{ item.reason }}</p>
                                     </div>
                                     {% endif %}
                                 </div>
@@ -423,6 +461,7 @@
         <!-- Bottom downloads (mobile only, desktop has side nav) -->
         <div class="md:hidden flex flex-col sm:flex-row gap-3 mt-8">
             <a href="/api/download/{{ task.id }}/report" class="inline-flex items-center justify-center gap-2 px-5 py-3 border border-slate-200 bg-white text-slate-700 text-sm rounded-lg">下载完整报告 (JSON)</a>
+            <a href="/api/download/{{ task.id }}/report_md" class="inline-flex items-center justify-center gap-2 px-5 py-3 border border-slate-200 bg-white text-slate-700 text-sm rounded-lg">下载完整报告 (Markdown)</a>
             <a href="/api/download/{{ task.id }}/remediation" class="inline-flex items-center justify-center gap-2 px-5 py-3 text-white text-sm font-medium rounded-lg btn-primary">下载整改任务清单</a>
         </div>
     </main>
