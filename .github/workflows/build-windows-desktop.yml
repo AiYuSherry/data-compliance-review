@@ -90,6 +90,8 @@ jobs:
           Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/workflows -ErrorAction SilentlyContinue
           Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/skill -ErrorAction SilentlyContinue
           Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/samples -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/knowledge-base/regulations-md -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/knowledge-base/data-outbound -ErrorAction SilentlyContinue
           Copy-Item -Recurse build/windows/python dist/windows/ComplianceAI/python
 
       - name: Copy icon asset
