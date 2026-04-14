@@ -16,7 +16,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-cp -R "$APP_PATH" "$TMP_DIR/$(basename "$APP_PATH")"
+cp -R "$APP_PATH" "$TMP_DIR/ComplianceAI.app"
 ln -s /Applications "$TMP_DIR/Applications"
 
 rm -f "$DMG_PATH"
