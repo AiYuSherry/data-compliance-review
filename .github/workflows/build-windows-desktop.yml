@@ -32,6 +32,9 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install Pillow for Windows icon conversion
+        run: python -m pip install pillow
+
       - name: Prepare folders
         shell: pwsh
         run: |
@@ -91,11 +94,14 @@ jobs:
 
       - name: Copy icon asset
         shell: pwsh
-        run: Copy-Item desktop/assets/complianceai-icon.png build/windows/icon/complianceai-icon.png
+        run: |
+          Copy-Item desktop/assets/complianceai-icon.png build/windows/icon/complianceai-icon.png
+          python -c "from PIL import Image; img = Image.open(r'build/windows/icon/complianceai-icon.png').convert('RGBA'); img.save(r'build/windows/icon/complianceai-icon.ico', sizes=[(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)])"
 
       - name: Publish Windows launcher
         shell: pwsh
         run: |
+          $iconPath = (Resolve-Path build/windows/icon/complianceai-icon.ico).Path
           dotnet publish desktop/windows/ComplianceAI.Windows/ComplianceAI.Windows.csproj `
             -c Release `
             -r win-x64 `
@@ -103,7 +109,7 @@ jobs:
             -o dist/windows/ComplianceAI `
             /p:PublishSingleFile=false `
             /p:PublishTrimmed=false `
-            /p:ApplicationIcon=build/windows/icon/complianceai-icon.png
+            /p:ApplicationIcon="$iconPath"
 
       - name: Install Inno Setup
         shell: pwsh
