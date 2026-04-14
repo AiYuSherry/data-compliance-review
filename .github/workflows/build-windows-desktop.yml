@@ -94,6 +94,46 @@ jobs:
           Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/knowledge-base/data-outbound -ErrorAction SilentlyContinue
           Copy-Item -Recurse build/windows/python dist/windows/ComplianceAI/python
 
+      - name: Smoke test bundled Python server
+        shell: pwsh
+        run: |
+          $logPath = (Resolve-Path dist/windows/ComplianceAI).Path + "\startup.log"
+          $webDir = (Resolve-Path dist/windows/ComplianceAI/payload/web).Path
+          $pythonExe = (Resolve-Path dist/windows/ComplianceAI/python/python.exe).Path
+          $port = 5110
+
+          $env:COMPLIANCEAI_PYTHON = $pythonExe
+          $env:COMPLIANCEAI_LOG_PATH = $logPath
+          $env:PYTHONUNBUFFERED = "1"
+
+          $proc = Start-Process -FilePath $pythonExe -ArgumentList "server_entry.py --port $port" -WorkingDirectory $webDir -PassThru -NoNewWindow
+          try {
+            $ok = $false
+            for ($i = 0; $i -lt 40; $i++) {
+              Start-Sleep -Milliseconds 500
+              try {
+                $resp = Invoke-WebRequest -Uri "http://127.0.0.1:$port/" -UseBasicParsing -TimeoutSec 2
+                if ($resp.StatusCode -eq 200) {
+                  $ok = $true
+                  break
+                }
+              } catch {
+              }
+            }
+
+            if (-not $ok) {
+              if (Test-Path $logPath) {
+                Write-Host "---- startup.log ----"
+                Get-Content $logPath
+              }
+              throw "Bundled Python server smoke test failed"
+            }
+          } finally {
+            if ($proc -and -not $proc.HasExited) {
+              Stop-Process -Id $proc.Id -Force
+            }
+          }
+
       - name: Copy icon asset
         shell: pwsh
         run: |
