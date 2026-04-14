@@ -1,0 +1,278 @@
+name: Build Windows Desktop
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Release tag to upload installer to
+        required: true
+        default: v1.2.0
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-x64:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Set up Python for asset prep
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Prepare folders
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist/windows/ComplianceAI | Out-Null
+          New-Item -ItemType Directory -Force dist/windows-installer | Out-Null
+          New-Item -ItemType Directory -Force build/windows/python | Out-Null
+          New-Item -ItemType Directory -Force build/windows/icon | Out-Null
+
+      - name: Download embeddable Python
+        shell: pwsh
+        run: |
+          $url = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip"
+          Invoke-WebRequest -Uri $url -OutFile build/windows/python-embed.zip
+          Expand-Archive -Path build/windows/python-embed.zip -DestinationPath build/windows/python -Force
+
+      - name: Enable site-packages in embeddable Python
+        shell: pwsh
+        run: |
+          $pth = Get-ChildItem build/windows/python -Filter "python*._pth" | Select-Object -First 1
+          $content = @"
+python311.zip
+.
+Lib\site-packages
+import site
+"@
+          Set-Content -Path $pth.FullName -Value $content -NoNewline
+          New-Item -ItemType Directory -Force build/windows/python/Lib/site-packages | Out-Null
+
+      - name: Install pip into embeddable Python
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri https://bootstrap.pypa.io/get-pip.py -OutFile build/windows/get-pip.py
+          & build/windows/python/python.exe build/windows/get-pip.py
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          & build/windows/python/python.exe -m pip install --upgrade pip
+          & build/windows/python/python.exe -m pip install -r data-compliance-web/requirements.txt
+
+      - name: Prepare runtime payload
+        shell: pwsh
+        run: |
+          Copy-Item -Recurse data-compliance-web dist/windows/ComplianceAI/payload/web
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/web/venv -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/web/output -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/web/uploads -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/web/__pycache__ -ErrorAction SilentlyContinue
+          Copy-Item -Recurse projects/data-compliance-ai-project-kit dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/tests -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/docs -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/references -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/workflows -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/skill -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/samples -ErrorAction SilentlyContinue
+          Copy-Item -Recurse build/windows/python dist/windows/ComplianceAI/python
+
+      - name: Copy icon asset
+        shell: pwsh
+        run: Copy-Item desktop/assets/complianceai-icon.png build/windows/icon/complianceai-icon.png
+
+      - name: Generate launcher source
+        shell: pwsh
+        run: |
+          @'
+using Microsoft.Web.WebView2.WinForms;
+using System.Diagnostics;
+using System.Net.Http;
+using System.Net.Sockets;
+using System.Text;
+
+namespace ComplianceAI.Windows;
+
+internal static class Program
+{
+    [STAThread]
+    static void Main()
+    {
+        ApplicationConfiguration.Initialize();
+        Application.Run(new MainForm());
+    }
+}
+
+internal sealed class MainForm : Form
+{
+    private readonly WebView2 _webView;
+    private Process? _serverProcess;
+    private readonly string _baseDir;
+    private readonly string _webDir;
+    private readonly string _pythonDir;
+    private readonly int _port;
+
+    public MainForm()
+    {
+        _baseDir = AppContext.BaseDirectory;
+        _webDir = Path.Combine(_baseDir, "payload", "web");
+        _pythonDir = Path.Combine(_baseDir, "python");
+        _port = GetFreePort();
+
+        Text = "ComplianceAI";
+        StartPosition = FormStartPosition.CenterScreen;
+        MinimumSize = new Size(1200, 820);
+        ClientSize = new Size(1440, 960);
+
+        _webView = new WebView2
+        {
+            Dock = DockStyle.Fill,
+            DefaultBackgroundColor = Color.White,
+        };
+
+        Controls.Add(_webView);
+        FormClosing += OnFormClosing;
+        Shown += async (_, __) => await StartAsync();
+    }
+
+    private async Task StartAsync()
+    {
+        try
+        {
+            EnsureBundle();
+            StartServer();
+            await WaitForServerAsync();
+            await _webView.EnsureCoreWebView2Async();
+            _webView.Source = new Uri($"http://127.0.0.1:{_port}/");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"ComplianceAI 启动失败\n\n{ex.Message}", "ComplianceAI", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Close();
+        }
+    }
+
+    private void EnsureBundle()
+    {
+        string[] requiredPaths =
+        {
+            Path.Combine(_webDir, "server_entry.py"),
+            Path.Combine(_webDir, "app.py"),
+            Path.Combine(_webDir, "templates"),
+            Path.Combine(_baseDir, "payload", "projects", "data-compliance-ai-project-kit", "knowledge-base", "local-regulations.sqlite3"),
+            Path.Combine(_pythonDir, "python.exe"),
+        };
+
+        foreach (var path in requiredPaths)
+        {
+            if (!File.Exists(path) && !Directory.Exists(path))
+                throw new InvalidOperationException($"缺少运行资源：{path}");
+        }
+    }
+
+    private void StartServer()
+    {
+        var pythonExe = Path.Combine(_pythonDir, "python.exe");
+        var info = new ProcessStartInfo
+        {
+            FileName = pythonExe,
+            WorkingDirectory = _webDir,
+            Arguments = $"server_entry.py --port {_port}",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
+        };
+        info.Environment["COMPLIANCEAI_PYTHON"] = pythonExe;
+        info.Environment["PYTHONUNBUFFERED"] = "1";
+
+        _serverProcess = new Process { StartInfo = info, EnableRaisingEvents = true };
+        _serverProcess.Start();
+        _serverProcess.BeginOutputReadLine();
+        _serverProcess.BeginErrorReadLine();
+    }
+
+    private async Task WaitForServerAsync()
+    {
+        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+        var url = new Uri($"http://127.0.0.1:{_port}/");
+        var deadline = DateTime.UtcNow.AddSeconds(45);
+        while (DateTime.UtcNow < deadline)
+        {
+            try
+            {
+                var response = await client.GetAsync(url);
+                if (response.IsSuccessStatusCode) return;
+            }
+            catch { }
+            await Task.Delay(300);
+        }
+        throw new TimeoutException("应用启动超时，请检查打包资源是否完整。");
+    }
+
+    private void OnFormClosing(object? sender, FormClosingEventArgs e)
+    {
+        try
+        {
+            if (_serverProcess is { HasExited: false })
+            {
+                _serverProcess.Kill(entireProcessTree: true);
+                _serverProcess.WaitForExit(2000);
+            }
+        }
+        catch { }
+    }
+
+    private static int GetFreePort()
+    {
+        using var listener = new TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        return ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+    }
+}
+'@ | Set-Content desktop/windows/ComplianceAI.Windows/Program.cs
+
+      - name: Publish Windows launcher
+        shell: pwsh
+        run: |
+          dotnet publish desktop/windows/ComplianceAI.Windows/ComplianceAI.Windows.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -o dist/windows/ComplianceAI `
+            /p:PublishSingleFile=false `
+            /p:PublishTrimmed=false `
+            /p:ApplicationIcon=build/windows/icon/complianceai-icon.png
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" desktop/windows/installer.iss
+
+      - name: Upload installer to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          gh release upload "${{ github.event.inputs.release_tag }}" dist/windows-installer/ComplianceAI-Windows-x64-Setup.exe --repo "${{ github.repository }}" --clobber
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: dist/windows-installer/ComplianceAI-Windows-x64-Setup.exe
