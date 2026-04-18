@@ -1,0 +1,509 @@
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-alt: #f8fafc;
+  --text: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-tint: #e0e7ff;
+  --danger: #ef4444;
+  --danger-bg: #fef2f2;
+  --warning: #f97316;
+  --warning-bg: #fff7ed;
+  --info: #3b82f6;
+  --info-bg: #eff6ff;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 20px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", "Noto Sans SC", sans-serif;
+}
+
+h1,
+h2,
+h3,
+.brand {
+  font-family: "Plus Jakarta Sans", "Inter", "Noto Sans SC", sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.page-shell {
+  padding: 20px;
+}
+
+.panel-card,
+.hero-card,
+.overview-card,
+.task-card,
+.evidence-card,
+.risk-item,
+.settings-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+
+.panel-card,
+.settings-card,
+.hero-card {
+  padding: 24px;
+}
+
+.brand-row,
+.section-head,
+.header-actions,
+.job-card-head,
+.risk-meta-row,
+.progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brand-row {
+  margin-bottom: 24px;
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.brand span {
+  color: var(--accent);
+}
+
+.ghost-button,
+.secondary-button,
+.primary-button {
+  border-radius: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.primary-button {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+}
+
+.primary-button:hover {
+  background: var(--accent-hover);
+}
+
+.ghost-button {
+  padding: 10px 12px;
+}
+
+.eyebrow,
+.field-label,
+.card-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.field-stack {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.field-input,
+.field-textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-alt);
+  padding: 14px 16px;
+  color: var(--text);
+}
+
+.field-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.status-box {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--accent-tint);
+  color: var(--text-secondary);
+}
+
+.status-box[data-tone="error"] {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.notice-bar {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.section-block {
+  margin-top: 28px;
+}
+
+.recent-jobs {
+  display: grid;
+  gap: 12px;
+}
+
+.job-card {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 16px;
+  cursor: pointer;
+}
+
+.job-title,
+.task-card h3,
+.evidence-card h3,
+.risk-item h3 {
+  margin: 10px 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.job-message,
+.supporting,
+.task-card p,
+.evidence-card li,
+.risk-item p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.empty-state {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.hero-shell {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+
+.result-header {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 20px 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.result-header h1,
+.hero-card h1 {
+  margin: 10px 0 8px;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.1;
+}
+
+.overview-grid,
+.task-list,
+.evidence-list,
+.risk-list,
+.cluster-grid {
+  max-width: 1180px;
+  margin: 24px auto 0;
+  padding: 0 20px;
+  display: grid;
+  gap: 20px;
+}
+
+.overview-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.overview-card,
+.task-card,
+.evidence-card,
+.risk-item,
+.cluster-card {
+  padding: 24px;
+}
+
+.risk-tally {
+  display: flex;
+  gap: 28px;
+  margin-top: 18px;
+}
+
+.risk-tally strong {
+  display: block;
+  font-size: 32px;
+  font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+}
+
+.risk-tally span {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.risk-badge,
+.theme-tag,
+.priority-chip,
+.task-owner,
+.job-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-高风险,
+.status-failed {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.badge-中风险 {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.badge-建议优化,
+.status-completed {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+.status-pending,
+.status-running,
+.theme-tag,
+.task-owner {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.priority-chip {
+  background: var(--text);
+  color: #fff;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.detail-span {
+  grid-column: 1 / -1;
+}
+
+.info-box {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.info-label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.detail-primary {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.detail-muted {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.detail-list,
+.chip-list,
+.task-subsection ul,
+.evidence-card ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-secondary);
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-left: 0;
+  list-style: none;
+}
+
+.chip-list li {
+  list-style: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.task-subsection {
+  margin-top: 14px;
+}
+
+.risk-quote {
+  margin: 10px 0 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fff9db;
+  border: 1px solid #fde68a;
+  color: var(--text-secondary);
+}
+
+.quote-block,
+.analysis-box {
+  margin-top: 16px;
+}
+
+.detail-panel {
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
+.detail-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.reg-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.reg-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.reg-card h4 {
+  margin: 10px 0 8px;
+  font-size: 15px;
+}
+
+.reg-code {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.reg-snippet {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 8px 0 0;
+}
+
+.report-meta-box p,
+.note-list p {
+  margin: 8px 0;
+}
+
+.note-list {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.detail-empty {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+  margin: 20px 0 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+}
+
+.error-card {
+  border-top: 4px solid var(--danger);
+}
+
+@media (max-width: 900px) {
+  .action-row,
+  .overview-grid,
+  .two-col,
+  .detail-grid,
+  .result-header {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+}
