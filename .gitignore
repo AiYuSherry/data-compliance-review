@@ -30,3 +30,7 @@ Thumbs.db
 *.log
 *.tmp
 *.bak
+
+# Browser extension build artifacts
+extension/node_modules/
+extension/dist/
