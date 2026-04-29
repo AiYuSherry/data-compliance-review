@@ -83,32 +83,76 @@
 	            display: grid;
 	            gap: 20px;
 	        }
-	        .review-toggle {
-	            display: grid;
-	            grid-template-columns: 1fr 1fr;
-	            gap: 8px;
-	            padding: 4px;
-	            background: var(--bg-subtle);
-	            border: 1px solid var(--border);
-	            border-radius: 14px;
-	            margin-bottom: 16px;
-	        }
-	        .mode-btn {
-	            border: 0;
-	            border-radius: 10px;
-	            padding: 10px 12px;
-	            background: transparent;
-	            color: var(--text-secondary);
-	            font: inherit;
-	            font-size: 14px;
-	            font-weight: 600;
-	            cursor: pointer;
-	        }
-	        .mode-btn.active {
-	            background: var(--bg);
-	            color: var(--accent);
-	            box-shadow: var(--shadow);
-	        }
+		        .review-toggle {
+		            position: relative;
+		            display: grid;
+		            grid-template-columns: 1fr 1fr;
+		            gap: 0;
+		            padding: 4px;
+		            background: var(--bg-subtle);
+		            border: 1px solid var(--border);
+		            border-radius: 14px;
+		            margin-bottom: 16px;
+		            overflow: hidden;
+		            isolation: isolate;
+		        }
+		        .review-toggle::before {
+		            content: '';
+		            position: absolute;
+		            inset: 4px auto 4px 4px;
+		            width: calc((100% - 8px) / 2);
+		            border-radius: 10px;
+		            background: var(--bg);
+		            box-shadow: var(--shadow);
+		            transform: translateX(0);
+		            transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 280ms ease;
+		            will-change: transform;
+		            z-index: 0;
+		        }
+		        .review-toggle.code-active::before {
+		            transform: translateX(100%);
+		        }
+		        .mode-btn {
+		            position: relative;
+		            z-index: 1;
+		            border: 0;
+		            border-radius: 10px;
+		            padding: 10px 12px;
+		            background: transparent;
+		            color: var(--text-secondary);
+		            font: inherit;
+		            font-size: 14px;
+		            font-weight: 600;
+		            cursor: pointer;
+		            transition: color 180ms ease, transform 180ms ease;
+		        }
+		        .mode-btn:hover {
+		            color: var(--text-primary);
+		        }
+		        .mode-btn.active {
+		            color: var(--accent);
+		        }
+		        .mode-btn:focus-visible {
+		            outline: 2px solid var(--accent);
+		            outline-offset: -2px;
+		        }
+		        .mode-btn:active {
+		            transform: scale(0.98);
+		        }
+		        .mode-copy {
+		            transition: opacity 160ms ease, transform 160ms ease;
+		        }
+		        .mode-copy.is-switching {
+		            opacity: 0;
+		            transform: translateY(3px);
+		        }
+		        @media (prefers-reduced-motion: reduce) {
+		            .review-toggle::before,
+		            .mode-btn,
+		            .mode-copy {
+		                transition: none;
+		            }
+		        }
         .upload-zone {
             border: 2px dashed var(--border);
             border-radius: 16px;
@@ -525,15 +569,15 @@
 	        <div class="upload-card">
 	            <label class="field-label">文档名称</label>
 	            <input type="text" id="documentName" class="field-input" placeholder="例：某 App 隐私政策 V2.1">
-	            <div class="review-toggle" role="tablist" aria-label="审查模式">
-	                <button class="mode-btn active" type="button" data-review-type="document">文档审查</button>
-	                <button class="mode-btn" type="button" data-review-type="code">代码审查</button>
+		            <div class="review-toggle" id="reviewToggle" role="tablist" aria-label="审查模式">
+		                <button class="mode-btn active" type="button" role="tab" aria-selected="true" data-review-type="document">文档审查</button>
+		                <button class="mode-btn" type="button" role="tab" aria-selected="false" data-review-type="code">代码审查</button>
 	            </div>
 	            
 	            <div id="dropZone" class="upload-zone">
 	                <div class="upload-icon">📁</div>
-	                <h3>上传文件开始审查</h3>
-	                <p id="supportText">支持 PDF、Word、TXT 格式</p>
+		                <h3 id="uploadTitle" class="mode-copy">上传文件开始审查</h3>
+		                <p id="supportText" class="mode-copy">支持 PDF、Word、TXT 格式</p>
 	                <button class="btn-primary" id="selectFileBtn">选择文件</button>
 	                <input type="file" id="fileInput" style="display:none" accept=".txt,.md,.doc,.docx,.pdf,.py,.js,.jsx,.ts,.tsx,.java,.go,.php,.rb,.swift,.kt,.c,.cc,.cpp,.h,.hpp,.cs,.rs,.sh,.sql,.html,.css,.json,.yaml,.yml,.toml,.env">
 	            </div>
@@ -650,12 +694,15 @@
     const errorModal = document.getElementById('errorModal');
     const errorMsg = document.getElementById('errorMessage');
     const closeError = document.getElementById('closeError');
+    const reviewToggle = document.getElementById('reviewToggle');
+    const uploadTitle = document.getElementById('uploadTitle');
     const supportText = document.getElementById('supportText');
     const historyList = document.getElementById('historyList');
     const refreshHistory = document.getElementById('refreshHistory');
 
     let currentFile = null;
     let reviewType = 'document';
+    let modeCopyTimer = null;
 
     function apiUrl(path) {
         try {
@@ -690,21 +737,51 @@
         }
     }
 
+    function setModeCopy(nextType) {
+        const nextTitle = nextType === 'code' ? '上传代码开始审查' : '上传文件开始审查';
+        const nextSupport = nextType === 'code'
+            ? '支持 JS、TS、Python、Java、Go、SQL 等代码文件'
+            : '支持 PDF、Word、TXT 格式';
+        const nextPlaceholder = nextType === 'code'
+            ? '直接粘贴代码，系统会扫描个人信息处理、密钥、日志、传输和本地存储风险...'
+            : '直接粘贴隐私政策或数据处理协议全文...';
+
+        if (modeCopyTimer) window.clearTimeout(modeCopyTimer);
+        [uploadTitle, supportText].forEach(el => el.classList.add('is-switching'));
+        modeCopyTimer = window.setTimeout(() => {
+            uploadTitle.textContent = nextTitle;
+            supportText.textContent = nextSupport;
+            textInput.placeholder = nextPlaceholder;
+            [uploadTitle, supportText].forEach(el => el.classList.remove('is-switching'));
+        }, 120);
+    }
+
     document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            const nextType = btn.dataset.reviewType || 'document';
+            if (nextType === reviewType) return;
             document.querySelectorAll('.mode-btn').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.mode-btn').forEach(item => item.setAttribute('aria-selected', 'false'));
             btn.classList.add('active');
-            reviewType = btn.dataset.reviewType || 'document';
+            btn.setAttribute('aria-selected', 'true');
+            reviewType = nextType;
+            reviewToggle.classList.toggle('code-active', reviewType === 'code');
             currentFile = null;
             fileInput.value = '';
             selectedFile.style.display = 'none';
             dropZone.style.display = 'block';
-            supportText.textContent = reviewType === 'code'
-                ? '支持 JS、TS、Python、Java、Go、SQL 等代码文件'
-                : '支持 PDF、Word、TXT 格式';
-            textInput.placeholder = reviewType === 'code'
-                ? '直接粘贴代码，系统会扫描个人信息处理、密钥、日志、传输和本地存储风险...'
-                : '直接粘贴隐私政策或数据处理协议全文...';
+            setModeCopy(reviewType);
+        });
+        btn.addEventListener('keydown', event => {
+            if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+            event.preventDefault();
+            const buttons = Array.from(document.querySelectorAll('.mode-btn'));
+            const index = buttons.indexOf(btn);
+            const nextIndex = event.key === 'ArrowRight'
+                ? (index + 1) % buttons.length
+                : (index - 1 + buttons.length) % buttons.length;
+            buttons[nextIndex].focus();
+            buttons[nextIndex].click();
         });
     });
 
