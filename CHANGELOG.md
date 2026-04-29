@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-04-29
+
+### 21:56 CST — Codex — 同步数据脱敏处理、OCR、法规库与浏览器扩展更新
+- 新增独立「数据脱敏处理」产品线：在首页与合规审查分开，后端新增独立脱敏任务流与结果页，不混入原 `/api/upload` 审查任务。
+- 脱敏默认策略从纯类型替换升级为「保留格式打码」：手机号、邮箱、身份证、银行卡、IP、地址等保持可读结构，密钥类仍使用安全标签替换。
+- 新增 `DESENSITIZATION_CONTRACT.md`，记录脱敏接口、输入格式、输出文件、报告 JSON/Markdown、下载接口与错误码。
+- 新增 OCR 支持：`ocr_text.py` 被接入 Web 端与项目 kit 的输入预处理流程，图片与扫描型 PDF 在本机具备 Tesseract 时可进入识别链路；缺失环境时输出明确错误。
+- 新增 `check_desensitization_policy.py`，防止脱敏策略回退到纯 `[PHONE_NUMBER]` 这类占位符。
+- 重整并扩充法规库：更新 `regulations-md` 分类，新增国家法律法规、地方规范性文件、境外法规 Markdown、境外法规种子、全文来源与构建脚本。
+- 新增浏览器扩展交付形态：同步 `extension/` 源码、测试、构建脚本、dist 产物和法规索引；修复扩展内对项目配置与法规库路径的真实仓库引用。
+- 新增 `skills/data-compliance-reviewer/`，将审查工作流、法规参考资料与运行脚本整理为可复用 skill 包。
+- 补充 `.gitignore`：排除 `node_modules/`、SQLite wal/shm、pycache、上传输出等本地运行产物，避免推送依赖缓存和临时文件。
+- 验证结果：Python 编译通过；脱敏策略回归通过；项目 smoke check 通过；法规搜索可用；扩展 `npm test -- --run` 通过；扩展 `npm run build` 通过；`git diff --check` 通过。
+- **文件改动范围**：`data-compliance-web/`、`projects/data-compliance-ai-project-kit/`、`extension/`、`skills/data-compliance-reviewer/`、`README.md`、`DESENSITIZATION_CONTRACT.md`、`DESIGN.md`、`.gitignore`
+
 ## 2026-04-13
 
 ### 17:21 CST — 你 — 将 DeepSeek API Key 与 .gitignore 纳入仓库，实现开箱即用
