@@ -6,6 +6,13 @@ import sqlite3
 from pathlib import Path
 
 
+def build_fts_query(query: str) -> str:
+    terms = [term.strip().replace('"', '""') for term in query.split() if term.strip()]
+    if not terms:
+        return '""'
+    return " ".join(f'"{term}"' for term in terms)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Search the local regulation SQLite database.")
     parser.add_argument("query", help="Title, standard code, or keyword query")
@@ -52,7 +59,7 @@ def main() -> int:
         WHERE regulation_fts MATCH ?
         LIMIT ?
         """,
-        (args.query, args.limit),
+        (build_fts_query(args.query), args.limit),
     ).fetchall()
     conn.close()
 

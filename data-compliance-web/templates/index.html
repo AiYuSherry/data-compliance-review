@@ -83,6 +83,48 @@
 	            display: grid;
 	            gap: 20px;
 	        }
+	        .product-switch {
+	            display: grid;
+	            grid-template-columns: 1fr 1fr;
+	            gap: 14px;
+	        }
+	        .product-card {
+	            text-align: left;
+	            border: 1px solid var(--border);
+	            border-radius: 18px;
+	            padding: 18px;
+	            background: var(--bg);
+	            color: var(--text-primary);
+	            box-shadow: var(--shadow);
+	            cursor: pointer;
+	            transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+	        }
+	        .product-card:hover {
+	            transform: translateY(-1px);
+	            border-color: var(--accent);
+	        }
+	        .product-card.active {
+	            border-color: var(--accent);
+	            box-shadow: 0 8px 30px rgba(79, 70, 229, 0.14);
+	        }
+	        .product-kicker {
+	            font-size: 12px;
+	            font-weight: 800;
+	            letter-spacing: 0.08em;
+	            text-transform: uppercase;
+	            color: var(--accent);
+	            margin-bottom: 6px;
+	        }
+	        .product-title {
+	            font-size: 16px;
+	            font-weight: 800;
+	            margin-bottom: 4px;
+	        }
+	        .product-copy {
+	            font-size: 13px;
+	            color: var(--text-secondary);
+	            line-height: 1.5;
+	        }
 		        .review-toggle {
 		            position: relative;
 		            display: grid;
@@ -188,6 +230,25 @@
             color: var(--text-muted);
             font-size: 14px;
             margin-bottom: 24px;
+        }
+        .format-detail {
+            display: none;
+            margin: -8px auto 24px;
+            max-width: 500px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.65;
+        }
+        .format-detail.show {
+            display: block;
+        }
+        .format-group {
+            display: block;
+            margin-top: 4px;
+        }
+        .format-group strong {
+            color: var(--text-primary);
+            font-weight: 700;
         }
         .btn-primary {
             display: inline-flex;
@@ -442,10 +503,10 @@
             color: var(--text-secondary);
             transition: all 0.2s;
         }
-        .btn-close:hover { 
-            background: var(--text-primary); 
-            color: #fff; 
-            border-color: var(--text-primary); 
+        .btn-close:hover {
+            background: var(--text-primary);
+            color: #fff;
+            border-color: var(--text-primary);
         }
         /* Field label */
         .field-label {
@@ -547,6 +608,7 @@
 	        }
         @media (max-width: 900px) {
             .main { grid-template-columns: 1fr; gap: 48px; }
+            .product-switch { grid-template-columns: 1fr; }
             .features-bar { grid-template-columns: 1fr; }
             .header-inner { padding: 0 24px; }
             .main { padding: 48px 24px; }
@@ -560,28 +622,41 @@
             <div class="logo">Compliance<span>AI</span></div>
         </div>
     </header>
-    <main class="main">
-        <div class="hero-content">
-            <h1>让合规审查<br>像呼吸一样自然</h1>
-            <p>AI 驱动的智能审查系统，自动识别法律文件中的合规风险，为您的业务保驾护航。</p>
-        </div>
+	    <main class="main">
+	        <div class="hero-content">
+	            <h1 id="heroTitle">让合规审查<br>像呼吸一样自然</h1>
+	            <p id="heroSubtitle">AI 驱动的智能审查系统，自动识别法律文件中的合规风险，为您的业务保驾护航。</p>
+	        </div>
 	        <div class="workbench">
+	        <div class="product-switch" role="tablist" aria-label="产品功能线">
+	            <button class="product-card active" type="button" role="tab" aria-selected="true" data-product-type="review">
+	                <p class="product-kicker">Review</p>
+	                <p class="product-title">合规审查</p>
+	                <p class="product-copy">识别文档和代码中的合规风险，生成审查报告与整改任务。</p>
+	            </button>
+	            <button class="product-card" type="button" role="tab" aria-selected="false" data-product-type="desensitize">
+	                <p class="product-kicker">Masking</p>
+	                <p class="product-title">数据脱敏处理</p>
+		                <p class="product-copy">对收集到的数据做保留格式打码，输出可读、可核验的脱敏文件和处理报告。</p>
+	            </button>
+	        </div>
 	        <div class="upload-card">
-	            <label class="field-label">文档名称</label>
+	            <label class="field-label" id="nameLabel">文档名称</label>
 	            <input type="text" id="documentName" class="field-input" placeholder="例：某 App 隐私政策 V2.1">
 		            <div class="review-toggle" id="reviewToggle" role="tablist" aria-label="审查模式">
 		                <button class="mode-btn active" type="button" role="tab" aria-selected="true" data-review-type="document">文档审查</button>
 		                <button class="mode-btn" type="button" role="tab" aria-selected="false" data-review-type="code">代码审查</button>
 	            </div>
-	            
+
 	            <div id="dropZone" class="upload-zone">
 	                <div class="upload-icon">📁</div>
 		                <h3 id="uploadTitle" class="mode-copy">上传文件开始审查</h3>
-		                <p id="supportText" class="mode-copy">支持 PDF、Word、TXT 格式</p>
+		                <p id="supportText" class="mode-copy">支持 PDF、Word、TXT、扫描 PDF、图片</p>
+		                <p id="formatDetail" class="format-detail"></p>
 	                <button class="btn-primary" id="selectFileBtn">选择文件</button>
-	                <input type="file" id="fileInput" style="display:none" accept=".txt,.md,.doc,.docx,.pdf,.py,.js,.jsx,.ts,.tsx,.java,.go,.php,.rb,.swift,.kt,.c,.cc,.cpp,.h,.hpp,.cs,.rs,.sh,.sql,.html,.css,.json,.yaml,.yml,.toml,.env">
+	                <input type="file" id="fileInput" style="display:none" accept=".txt,.md,.markdown,.log,.rtf,.html,.htm,.xml,.yaml,.yml,.toml,.ini,.cfg,.conf,.env,.doc,.docx,.pdf,.pptx,.csv,.tsv,.xlsx,.xls,.ods,.json,.jsonl,.ndjson,.png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff,.py,.js,.jsx,.ts,.tsx,.java,.go,.php,.rb,.swift,.kt,.c,.cc,.cpp,.h,.hpp,.cs,.rs,.sh,.sql,.css">
 	            </div>
-            
+
             <div id="selectedFile" style="display:none">
                 <div class="file-card">
                     <div class="file-card-left">
@@ -594,11 +669,11 @@
                     <button id="removeFile" class="file-remove">✕</button>
                 </div>
             </div>
-            
+
             <div class="or-divider">或</div>
-            
+
 	            <textarea id="textInput" class="text-input-area" rows="4" placeholder="直接粘贴隐私政策或数据处理协议全文..."></textarea>
-	            
+
 	            <button id="startBtn" class="btn-primary" style="width: 100%; margin-top: 16px;">
 	                开始审查
 	            </button>
@@ -609,17 +684,7 @@
 	                <button class="history-refresh" id="refreshHistory" type="button">刷新</button>
 	            </div>
 	            <div class="history-list" id="historyList">
-	                {% for item in history %}
-	                <a class="history-item" href="/result/{{ item.id }}">
-	                    <div>
-	                        <p class="history-name">{{ item.document_name }}</p>
-	                        <p class="history-meta">{{ '代码' if item.review_type == 'code' else '文档' }} · {{ item.created_at[:19].replace('T', ' ') }}</p>
-	                    </div>
-	                    <span class="history-status">{{ item.status }}</span>
-	                </a>
-	                {% else %}
-	                <p class="history-empty">暂无审查记录</p>
-	                {% endfor %}
+	                <p class="history-empty">正在读取记录...</p>
 	            </div>
 	        </section>
 	        </div>
@@ -697,14 +762,24 @@
     const reviewToggle = document.getElementById('reviewToggle');
     const uploadTitle = document.getElementById('uploadTitle');
     const supportText = document.getElementById('supportText');
+    const formatDetail = document.getElementById('formatDetail');
     const historyList = document.getElementById('historyList');
     const refreshHistory = document.getElementById('refreshHistory');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroSubtitle = document.getElementById('heroSubtitle');
+    const nameLabel = document.getElementById('nameLabel');
 
     let currentFile = null;
+    let productType = 'review';
     let reviewType = 'document';
     let modeCopyTimer = null;
+    const runningFromFile = window.location.protocol === 'file:';
+    const localAppUrl = 'http://127.0.0.1:5001/';
 
     function apiUrl(path) {
+        if (runningFromFile) {
+            return new URL(path, localAppUrl).toString();
+        }
         try {
             return new URL(path, window.location.href).toString();
         } catch (_) {
@@ -738,16 +813,29 @@
     }
 
     function setModeCopy(nextType) {
-        const nextTitle = nextType === 'code' ? '上传代码开始审查' : '上传文件开始审查';
-        const nextSupport = nextType === 'code'
+        const nextTitle = productType === 'desensitize'
+            ? '上传数据开始脱敏'
+            : nextType === 'code' ? '上传代码开始审查' : '上传文件开始审查';
+        const nextSupport = productType === 'desensitize'
+            ? '支持 30+ 常见格式，覆盖文档、表格、结构化数据、图片与扫描件'
+            : nextType === 'code'
             ? '支持 JS、TS、Python、Java、Go、SQL 等代码文件'
-            : '支持 PDF、Word、TXT 格式';
-        const nextPlaceholder = nextType === 'code'
+            : '支持 PDF、Word、TXT、扫描 PDF、图片';
+        const nextPlaceholder = productType === 'desensitize'
+            ? '直接粘贴待脱敏数据，系统会将手机号、邮箱、身份证、银行卡、地址、密钥等替换为类型标签...'
+            : nextType === 'code'
             ? '直接粘贴代码，系统会扫描个人信息处理、密钥、日志、传输和本地存储风险...'
             : '直接粘贴隐私政策或数据处理协议全文...';
+        const detailHtml = productType === 'desensitize'
+            ? [
+                '<span class="format-group">例如 Office/PDF/PPT、CSV/Excel/JSON、网页/配置文件，以及 PNG/JPG/TIFF 等图片。</span>',
+            ].join('')
+            : '';
 
         if (modeCopyTimer) window.clearTimeout(modeCopyTimer);
         [uploadTitle, supportText].forEach(el => el.classList.add('is-switching'));
+        formatDetail.classList.toggle('show', Boolean(detailHtml));
+        formatDetail.innerHTML = detailHtml;
         modeCopyTimer = window.setTimeout(() => {
             uploadTitle.textContent = nextTitle;
             supportText.textContent = nextSupport;
@@ -755,6 +843,34 @@
             [uploadTitle, supportText].forEach(el => el.classList.remove('is-switching'));
         }, 120);
     }
+
+    function setProductType(nextProductType) {
+        productType = nextProductType;
+        document.querySelectorAll('.product-card').forEach(item => {
+            const active = item.dataset.productType === productType;
+            item.classList.toggle('active', active);
+            item.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        reviewToggle.style.display = productType === 'review' ? 'grid' : 'none';
+        heroTitle.innerHTML = productType === 'desensitize'
+            ? '让数据脱敏<br>变成标准动作'
+            : '让合规审查<br>像呼吸一样自然';
+        heroSubtitle.textContent = productType === 'desensitize'
+            ? '对收集到的文本、文档、表格和图片做保留格式打码，生成可交付、可核验的脱敏文件与处理报告。'
+            : 'AI 驱动的智能审查系统，自动识别法律文件中的合规风险，为您的业务保驾护航。';
+        nameLabel.textContent = productType === 'desensitize' ? '任务名称' : '文档名称';
+        docName.placeholder = productType === 'desensitize' ? '例：用户调研数据脱敏' : '例：某 App 隐私政策 V2.1';
+        startBtn.textContent = productType === 'desensitize' ? '开始脱敏' : '开始审查';
+        currentFile = null;
+        fileInput.value = '';
+        selectedFile.style.display = 'none';
+        dropZone.style.display = 'block';
+        setModeCopy(reviewType);
+    }
+
+    document.querySelectorAll('.product-card').forEach(btn => {
+        btn.addEventListener('click', () => setProductType(btn.dataset.productType || 'review'));
+    });
 
     document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -853,7 +969,9 @@
 
         const fd = new FormData();
         fd.append('document_name', name);
-        fd.append('review_type', reviewType);
+        if (productType === 'review') {
+            fd.append('review_type', reviewType);
+        }
         if (currentFile) {
             const uploadFile = buildUploadFile(currentFile);
             fd.append('file', uploadFile, normalizeUploadFilename(currentFile.name));
@@ -865,9 +983,10 @@
         setProgress(0, '准备开始…');
 
         try {
-            const res = await fetch(apiUrl('/api/upload'), { method: 'POST', body: fd });
+            const endpoint = productType === 'desensitize' ? '/api/desensitize' : '/api/upload';
+            const res = await fetch(apiUrl(endpoint), { method: 'POST', body: fd });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || '上传失败');
+            if (!res.ok) throw new Error(data.error || '提交失败');
             streamProgress(data.task_id);
         } catch (e) {
             progressModal.classList.remove('show');
@@ -900,30 +1019,44 @@
 
             if (data.status === 'completed') {
                 es.close();
-                setProgress(100, '审查完成，正在跳转…');
-                setTimeout(() => window.location.href = apiUrl(`/result/${encodeURIComponent(taskId)}`), 500);
+                const doneText = productType === 'desensitize' ? '脱敏完成，正在跳转…' : '审查完成，正在跳转…';
+                const resultPath = productType === 'desensitize'
+                    ? `/desensitize/result/${encodeURIComponent(taskId)}`
+                    : `/result/${encodeURIComponent(taskId)}`;
+                setProgress(100, doneText);
+                setTimeout(() => window.location.href = apiUrl(resultPath), 500);
                 return;
             }
 
             if (data.status === 'failed') {
                 es.close();
                 progressModal.classList.remove('show');
-                showErr(p.message || '审查失败');
+                showErr(p.message || (productType === 'desensitize' ? '脱敏失败' : '审查失败'));
             }
         };
         es.onerror = () => es.close();
     }
 
     async function loadHistory() {
+        if (runningFromFile) {
+            historyList.innerHTML = `
+                <p class="history-empty">
+                    当前是静态模板预览，记录和处理接口需要从
+                    <a href="${localAppUrl}" style="color:var(--accent);font-weight:700">本地服务页面</a>
+                    打开。
+                </p>
+            `;
+            return;
+        }
         try {
             const res = await fetch(apiUrl('/api/history'), { cache: 'no-store' });
             const data = await res.json();
             const items = data.items || [];
             historyList.innerHTML = items.length ? items.map(item => `
-                <a class="history-item" href="/result/${encodeURIComponent(item.id)}">
+                <a class="history-item" href="${item.product_type === 'desensitize' ? '/desensitize/result/' : '/result/'}${encodeURIComponent(item.id)}">
                     <div>
                         <p class="history-name">${escapeHtml(item.document_name || '未命名任务')}</p>
-                        <p class="history-meta">${item.review_type === 'code' ? '代码' : '文档'} · ${escapeHtml(formatTime(item.created_at))}</p>
+                        <p class="history-meta">${item.product_type === 'desensitize' ? '脱敏处理' : (item.review_type === 'code' ? '代码' : '文档')} · ${escapeHtml(formatTime(item.created_at))}</p>
                     </div>
                     <span class="history-status">${escapeHtml(item.status || '')}</span>
                 </a>

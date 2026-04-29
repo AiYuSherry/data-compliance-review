@@ -6,9 +6,21 @@ import json
 import re
 import subprocess
 import shutil
+import sys
 from pathlib import Path
 
 from docx import Document
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from ocr_text import (  # noqa: E402
+    IMAGE_EXTENSIONS,
+    OcrUnavailable,
+    extract_image_text,
+    extract_pdf_ocr_text,
+)
 
 try:
     from pypdf import PdfReader
@@ -22,6 +34,8 @@ def read_text(file_path: str, text: str) -> str:
         suffix = path.suffix.lower()
         if suffix == '.pdf':
             return read_pdf_text(path)
+        if suffix in IMAGE_EXTENSIONS:
+            return read_image_text(path)
         if suffix in {'.doc', '.docx'}:
             return read_office_text(path)
         return path.read_text(encoding='utf-8')
@@ -49,7 +63,24 @@ def read_pdf_text(path: Path) -> str:
             text = run.stdout.strip()
 
     if not text:
-        raise SystemExit('无法从 PDF 中提取文本，请确认文件可复制文本或先做 OCR')
+        try:
+            text = extract_pdf_ocr_text(path)
+        except OcrUnavailable as exc:
+            raise SystemExit(f'无法从 PDF 中提取文本，且无法执行 OCR：{exc}') from exc
+        except Exception as exc:
+            raise SystemExit(f'无法从 PDF 中提取文本，OCR 失败：{exc}') from exc
+    return text
+
+
+def read_image_text(path: Path) -> str:
+    try:
+        text = extract_image_text(path)
+    except OcrUnavailable as exc:
+        raise SystemExit(f'图片审查需要 OCR：{exc}') from exc
+    except Exception as exc:
+        raise SystemExit(f'图片 OCR 失败：{exc}') from exc
+    if not text:
+        raise SystemExit('图片 OCR 未识别到可审查文本')
     return text
 
 
@@ -121,6 +152,9 @@ def extract_page_texts(file_path: str, raw: str) -> list[str]:
     if path and path.suffix.lower() == '.pdf':
         raw_pages = [page.strip() for page in raw.split('\f')]
         return [normalize(page) for page in raw_pages if normalize(page)]
+    if path and path.suffix.lower() in IMAGE_EXTENSIONS:
+        normalized = normalize(raw)
+        return [normalized] if normalized else []
     normalized = normalize(raw)
     return [normalized] if normalized else []
 

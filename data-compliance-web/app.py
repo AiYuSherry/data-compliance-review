@@ -19,6 +19,15 @@ from threading import Thread
 
 from flask import Flask, render_template, request, jsonify, Response, send_file
 
+from desensitize_engine import (
+    IMAGE_EXTENSIONS,
+    JSON_EXTENSIONS,
+    PRESENTATION_EXTENSIONS,
+    TABLE_EXTENSIONS,
+    TEXT_EXTENSIONS,
+    process_desensitization,
+)
+
 app = Flask(__name__)
 
 # 配置
@@ -29,7 +38,12 @@ UPLOAD_FOLDER = BASE_DIR / 'uploads'
 OUTPUT_FOLDER = BASE_DIR / 'output'
 SCRIPTS_DIR = BASE_DIR / 'scripts'
 LOCAL_REGULATION_DB = PROJECT_ROOT / 'knowledge-base' / 'local-regulations.sqlite3'
-ALLOWED_EXTENSIONS = {'txt', 'md', 'doc', 'docx', 'pdf'}
+REVIEW_IMAGE_EXTENSIONS = {ext.lstrip('.') for ext in IMAGE_EXTENSIONS}
+ALLOWED_EXTENSIONS = {'txt', 'md', 'doc', 'docx', 'pdf'} | REVIEW_IMAGE_EXTENSIONS
+DESENSITIZE_EXTENSIONS = {'doc', 'docx', 'pdf'} | {
+    ext.lstrip('.')
+    for ext in (TEXT_EXTENSIONS | TABLE_EXTENSIONS | JSON_EXTENSIONS | IMAGE_EXTENSIONS | PRESENTATION_EXTENSIONS)
+}
 CODE_EXTENSIONS = {
     'py', 'js', 'jsx', 'ts', 'tsx', 'java', 'go', 'php', 'rb', 'swift', 'kt',
     'kts', 'c', 'cc', 'cpp', 'h', 'hpp', 'cs', 'rs', 'sh', 'bash', 'zsh',
@@ -51,7 +65,11 @@ def _task_state_path(task_id: str) -> Path:
 
 def save_task_state(task_id: str):
     if task_id in tasks:
-        _task_state_path(task_id).write_text(json.dumps(tasks[task_id], ensure_ascii=False, indent=2), encoding='utf-8')
+        path = _task_state_path(task_id)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix('.json.tmp')
+        tmp.write_text(json.dumps(tasks[task_id], ensure_ascii=False, indent=2), encoding='utf-8')
+        tmp.replace(path)
 
 
 def load_task_state(task_id: str) -> dict | None:
@@ -74,6 +92,11 @@ def ensure_task_loaded(task_id: str) -> bool:
 def allowed_file(filename):
     safe_name = Path(filename or '').name
     return '.' in safe_name and safe_name.rsplit('.', 1)[1].lower() in (ALLOWED_EXTENSIONS | CODE_EXTENSIONS)
+
+
+def allowed_desensitize_file(filename):
+    safe_name = Path(filename or '').name
+    return '.' in safe_name and safe_name.rsplit('.', 1)[1].lower() in DESENSITIZE_EXTENSIONS
 
 
 def safe_upload_filename(filename: str) -> str:
@@ -107,6 +130,7 @@ def list_review_history(limit: int = 20) -> list[dict]:
             'id': state.get('id') or state_path.parent.name,
             'document_name': state.get('document_name') or '未命名任务',
             'status': state.get('status', 'unknown'),
+            'product_type': state.get('product_type', 'review'),
             'review_type': state.get('review_type', 'document'),
             'created_at': state.get('created_at', ''),
             'completed_at': state.get('completed_at', ''),
@@ -910,6 +934,66 @@ def run_code_review_pipeline(task_id, input_path, document_name, is_text=False):
         save_task_state(task_id)
 
 
+def run_desensitize_pipeline(task_id, input_path, document_name, is_text=False):
+    task = tasks[task_id]
+    work_dir = OUTPUT_FOLDER / task_id
+    work_dir.mkdir(parents=True, exist_ok=True)
+
+    def update_progress(step, message, status='running', detail=None):
+        task['progress'] = {
+            'step': step,
+            'total_steps': 4,
+            'message': message,
+            'status': status,
+            'detail': detail or {},
+        }
+        save_task_state(task_id)
+
+    try:
+        update_progress(1, '正在读取待脱敏数据...')
+        time.sleep(0.2)
+        update_progress(2, '正在识别敏感信息并执行保留格式打码...')
+        result = process_desensitization(
+            task_id=task_id,
+            input_path=Path(input_path),
+            document_name=document_name,
+            work_dir=work_dir,
+            is_text=is_text,
+        )
+
+        update_progress(3, '正在生成脱敏报告与留痕说明...')
+        report = result['report']
+        task['status'] = 'completed'
+        task['completed_at'] = datetime.now().isoformat()
+        task['result'] = {
+            'desensitized_output': str(result['output_file']),
+            'desensitization_report': str(result['report_json']),
+            'desensitization_report_md': str(result['report_md']),
+            'retention_note': str(result['retention_note']),
+        }
+        task['progress'] = {
+            'step': 4,
+            'total_steps': 4,
+            'message': f'脱敏完成：命中 {report.get("summary", {}).get("total_findings", 0)} 处敏感信息',
+            'status': 'completed',
+        }
+        save_task_state(task_id)
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"ERROR in desensitize task {task_id}: {error_detail}")
+        task['status'] = 'failed'
+        task['error'] = str(e)
+        task['error_detail'] = error_detail
+        task['progress'] = {
+            'step': task.get('progress', {}).get('step', 0),
+            'total_steps': 4,
+            'message': f'脱敏失败: {str(e)}',
+            'status': 'error',
+        }
+        save_task_state(task_id)
+
+
 @app.route('/')
 def index():
     """首页 - 上传页面"""
@@ -1008,6 +1092,61 @@ def upload_file():
         return jsonify({'error': '请上传文件或输入文本'}), 400
 
 
+@app.route('/api/desensitize', methods=['POST'])
+def desensitize_upload():
+    """处理数据脱敏任务，独立于合规审查流水线。"""
+    input_text = request.form.get('input_text', '').strip()
+    uploaded_file = request.files.get('file')
+    document_name = derive_document_name(
+        request.form.get('document_name', ''),
+        input_text,
+        uploaded_file,
+    )
+    task_id = str(uuid.uuid4())[:8]
+
+    if input_text:
+        temp_file = UPLOAD_FOLDER / f'{task_id}_desensitize.txt'
+        temp_file.write_text(input_text, encoding='utf-8')
+        tasks[task_id] = {
+            'id': task_id,
+            'document_name': document_name,
+            'product_type': 'desensitize',
+            'input_type': 'text',
+            'input_path': str(temp_file),
+            'status': 'pending',
+            'created_at': datetime.now().isoformat(),
+        }
+        thread = Thread(target=run_desensitize_pipeline, args=(task_id, temp_file, document_name, True))
+        thread.start()
+        return jsonify({'task_id': task_id})
+
+    if uploaded_file is not None:
+        if uploaded_file.filename == '':
+            return jsonify({'error': '请选择文件'}), 400
+        if not allowed_desensitize_file(uploaded_file.filename):
+            return jsonify({'error': '不支持的脱敏文件类型'}), 400
+
+        safe_filename = safe_upload_filename(uploaded_file.filename)
+        file_path = UPLOAD_FOLDER / f'{task_id}_{safe_filename}'
+        uploaded_file.save(file_path)
+        tasks[task_id] = {
+            'id': task_id,
+            'document_name': document_name,
+            'product_type': 'desensitize',
+            'input_type': 'file',
+            'input_path': str(file_path),
+            'original_filename': uploaded_file.filename,
+            'stored_filename': safe_filename,
+            'status': 'pending',
+            'created_at': datetime.now().isoformat(),
+        }
+        thread = Thread(target=run_desensitize_pipeline, args=(task_id, file_path, document_name, False))
+        thread.start()
+        return jsonify({'task_id': task_id})
+
+    return jsonify({'error': '请上传文件或输入文本'}), 400
+
+
 @app.route('/api/progress/<task_id>')
 def get_progress(task_id):
     """SSE推送进度"""
@@ -1052,6 +1191,8 @@ def result_page(task_id):
         return '任务不存在', 404
 
     task = tasks[task_id]
+    if task.get('product_type') == 'desensitize':
+        return render_desensitize_result(task_id)
 
     if task['status'] != 'completed':
         return render_template('result.html', task=task, report=None)
@@ -1089,6 +1230,24 @@ def result_page(task_id):
                           risk_stats=risk_stats, items=sorted_items, **extra)
 
 
+@app.route('/desensitize/result/<task_id>')
+def desensitize_result_page(task_id):
+    return render_desensitize_result(task_id)
+
+
+def render_desensitize_result(task_id):
+    if not ensure_task_loaded(task_id):
+        return '任务不存在', 404
+    task = tasks[task_id]
+    report = None
+    if task['status'] == 'completed':
+        report_path = Path(task.get('result', {}).get('desensitization_report', ''))
+        if not report_path.exists():
+            return '脱敏报告不存在', 404
+        report = json.loads(report_path.read_text(encoding='utf-8'))
+    return render_template('desensitize_result.html', task=task, report=report)
+
+
 @app.route('/api/result/<task_id>')
 def get_result(task_id):
     """API获取结果"""
@@ -1102,6 +1261,16 @@ def get_result(task_id):
             'task_id': task_id,
             'status': task['status'],
             'progress': task.get('progress', {})
+        })
+
+    if task.get('product_type') == 'desensitize':
+        report_path = Path(task['result']['desensitization_report'])
+        return jsonify({
+            'task_id': task_id,
+            'status': task['status'],
+            'product_type': 'desensitize',
+            'document_name': task['document_name'],
+            'report': json.loads(report_path.read_text(encoding='utf-8')),
         })
 
     report_path = Path(task['result']['report'])
@@ -1130,6 +1299,28 @@ def download_file(task_id, file_type):
 
     if task['status'] != 'completed':
         return '审查尚未完成', 400
+
+    if task.get('product_type') == 'desensitize':
+        file_mapping = {
+            'desensitized_output': ('desensitized_output', ''),
+            'desensitization_report': ('desensitization_report', '.json'),
+            'desensitization_report_md': ('desensitization_report_md', '.md'),
+            'retention_note': ('retention_note', '.txt'),
+        }
+        if file_type not in file_mapping:
+            return '不支持的文件类型', 400
+        key, ext = file_mapping[file_type]
+        if key not in task.get('result', {}):
+            return '文件不存在', 404
+        file_path = Path(task['result'][key])
+        if not file_path.exists():
+            return '文件不存在', 404
+        download_ext = file_path.suffix or ext
+        return send_file(
+            file_path,
+            as_attachment=True,
+            download_name=f'{task["document_name"]}_{file_type}{download_ext}'
+        )
 
     file_mapping = {
         'report': ('report', '.json'),
@@ -1162,6 +1353,11 @@ def download_file(task_id, file_type):
     )
 
 
+@app.route('/api/desensitize/download/<task_id>/<file_type>')
+def download_desensitize_file(task_id, file_type):
+    return download_file(task_id, file_type)
+
+
 @app.route('/api/save-download/<task_id>/<file_type>', methods=['POST'])
 def save_download_file(task_id, file_type):
     """桌面预览/原生壳内可靠保存：复制到下载文件夹，而不是依赖 WKWebView 附件下载。"""
@@ -1171,6 +1367,34 @@ def save_download_file(task_id, file_type):
     task = tasks[task_id]
     if task['status'] != 'completed':
         return jsonify({'error': '审查尚未完成'}), 400
+
+    if task.get('product_type') == 'desensitize':
+        file_mapping = {
+            'desensitized_output': ('desensitized_output', ''),
+            'desensitization_report': ('desensitization_report', '.json'),
+            'desensitization_report_md': ('desensitization_report_md', '.md'),
+            'retention_note': ('retention_note', '.txt'),
+        }
+        if file_type not in file_mapping:
+            return jsonify({'error': '不支持的文件类型'}), 400
+        key, ext = file_mapping[file_type]
+        if key not in task.get('result', {}):
+            return jsonify({'error': '文件不存在'}), 404
+        source = Path(task['result'][key])
+        if not source.exists():
+            return jsonify({'error': '文件不存在'}), 404
+
+        downloads_dir = Path.home() / 'Downloads' / 'ComplianceAI'
+        downloads_dir.mkdir(parents=True, exist_ok=True)
+        base = safe_download_filename(task.get('document_name', 'ComplianceAI'))
+        target_ext = source.suffix or ext
+        target = downloads_dir / f'{base}_{file_type}{target_ext}'
+        counter = 1
+        while target.exists():
+            target = downloads_dir / f'{base}_{file_type}_{counter}{target_ext}'
+            counter += 1
+        shutil.copy2(source, target)
+        return jsonify({'ok': True, 'path': str(target)})
 
     file_mapping = {
         'report': ('report', '.json'),
@@ -1204,6 +1428,11 @@ def save_download_file(task_id, file_type):
         counter += 1
     shutil.copy2(source, target)
     return jsonify({'ok': True, 'path': str(target)})
+
+
+@app.route('/api/desensitize/save-download/<task_id>/<file_type>', methods=['POST'])
+def save_desensitize_file(task_id, file_type):
+    return save_download_file(task_id, file_type)
 
 
 @app.route('/dev/result')

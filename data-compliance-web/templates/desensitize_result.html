@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>脱敏结果 — ComplianceAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --bg-subtle: #f8fafc;
+            --accent: #4f46e5;
+            --accent-light: #e0e7ff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 20px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 40px rgba(0,0,0,0.08);
+            --green: #22c55e;
+            --green-bg: #f0fdf4;
+            --red: #ef4444;
+            --red-bg: #fef2f2;
+            --blue-bg: #eff6ff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+            font-family: "Inter", "Noto Sans SC", sans-serif;
+            line-height: 1.6;
+        }
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+        }
+        .header-inner {
+            max-width: 1200px;
+            height: 72px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+        .logo {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        .logo span { color: var(--accent); }
+        .back-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .page-wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 48px;
+        }
+        .sidebar {
+            position: sticky;
+            top: 100px;
+            align-self: start;
+        }
+        .side-title,
+        .label {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .download-list {
+            margin-top: 16px;
+            display: grid;
+            gap: 10px;
+        }
+        .dl-link {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 10px 0;
+        }
+        .content { min-width: 0; }
+        .hero,
+        .card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+        .hero {
+            padding: 34px;
+            margin-bottom: 24px;
+        }
+        .eyebrow {
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        h1 {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: clamp(32px, 4vw, 48px);
+            line-height: 1.1;
+            margin-bottom: 14px;
+        }
+        .supporting {
+            color: var(--text-secondary);
+            font-size: 16px;
+            max-width: 720px;
+        }
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+        .card { padding: 24px; }
+        .metric {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 34px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-top: 8px;
+        }
+        .metric-sub {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        .section {
+            margin-top: 28px;
+        }
+        .section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .section-title {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .entity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .entity-chip {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            background: var(--bg);
+        }
+        .entity-chip strong {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+        .table-wrap {
+            overflow: auto;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--bg);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 720px;
+        }
+        th,
+        td {
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        th {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .notice {
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: var(--blue-bg);
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .state-page {
+            max-width: 680px;
+            margin: 80px auto;
+            text-align: center;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: var(--shadow-lg);
+        }
+        .state-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 18px;
+            border-radius: 18px;
+            display: grid;
+            place-items: center;
+            background: var(--accent-light);
+            font-size: 30px;
+        }
+        .state-icon.err { background: var(--red-bg); color: var(--red); }
+        .state-title {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .state-sub { color: var(--text-secondary); }
+        .download-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 28px;
+            transform: translateX(-50%);
+            max-width: min(560px, calc(100vw - 32px));
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: var(--text-primary);
+            color: #fff;
+            font-size: 13px;
+            box-shadow: var(--shadow-lg);
+            z-index: 100;
+            display: none;
+        }
+        .download-toast.show { display: block; }
+        @media (max-width: 900px) {
+            .header-inner { padding: 0 24px; }
+            .page-wrap { grid-template-columns: 1fr; padding: 28px 24px; }
+            .sidebar { position: static; }
+            .overview-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <a class="logo" href="/">Compliance<span>AI</span></a>
+            <a class="back-link" href="/">返回首页</a>
+        </div>
+    </header>
+
+    {% if task.status != 'completed' %}
+    <div class="state-page">
+        <div class="state-icon {% if task.status == 'failed' %}err{% endif %}">{% if task.status == 'failed' %}⚠️{% else %}⏳{% endif %}</div>
+        <h1 class="state-title">{{ '脱敏失败' if task.status == 'failed' else '脱敏处理中' }}</h1>
+        <p class="state-sub">{{ task.error if task.status == 'failed' else task.progress.message or '正在处理，请稍后刷新。' }}</p>
+    </div>
+    {% elif report %}
+    <div class="page-wrap">
+        <aside class="sidebar">
+            <p class="side-title">下载文件</p>
+            <div class="download-list">
+                <a class="dl-link" href="/api/desensitize/download/{{ task.id }}/desensitized_output" data-download-type="desensitized_output">脱敏结果文件</a>
+                <a class="dl-link" href="/api/desensitize/download/{{ task.id }}/desensitization_report" data-download-type="desensitization_report">脱敏报告 JSON</a>
+                <a class="dl-link" href="/api/desensitize/download/{{ task.id }}/desensitization_report_md" data-download-type="desensitization_report_md">脱敏报告 Markdown</a>
+                <a class="dl-link" href="/api/desensitize/download/{{ task.id }}/retention_note" data-download-type="retention_note">原文件留存说明</a>
+            </div>
+        </aside>
+        <main class="content">
+            <section class="hero">
+                <p class="eyebrow">数据脱敏处理完成</p>
+                <h1>{{ report.document_name }}</h1>
+                <p class="supporting">已按保留格式打码策略生成脱敏结果。自动识别可能存在漏检或误检，正式外发前建议抽样复核。</p>
+            </section>
+
+            <section class="overview-grid">
+                <article class="card">
+                    <p class="label">命中总数</p>
+                    <p class="metric">{{ report.summary.total_findings }}</p>
+                    <p class="metric-sub">处敏感信息</p>
+                </article>
+                <article class="card">
+                    <p class="label">输入类型</p>
+                    <p class="metric" style="font-size:26px">{{ report.input_type }}</p>
+                    <p class="metric-sub">{{ report.input_name }}</p>
+                </article>
+                <article class="card">
+                    <p class="label">处理策略</p>
+                    <p class="metric" style="font-size:26px">格式打码</p>
+                    <p class="metric-sub">例如 138****5678</p>
+                </article>
+            </section>
+
+            <section class="section">
+                <div class="section-head">
+                    <h2 class="section-title">命中类型</h2>
+                </div>
+                <div class="entity-grid">
+                    {% for key, value in report.summary.entity_counts.items() %}
+                    <div class="entity-chip">
+                        <strong>{{ value }}</strong>
+                        <span>{{ key }}</span>
+                    </div>
+                    {% else %}
+                    <div class="notice">未命中敏感信息，仍建议人工抽样复核。</div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-head">
+                    <h2 class="section-title">处理明细</h2>
+                    <span class="label">最多展示 500 条</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>类型</th>
+                                <th>位置</th>
+                                <th>替换为</th>
+                                <th>预览</th>
+                                <th>置信度</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in report.findings %}
+                            <tr>
+                                <td>{{ item.entity_type }}</td>
+                                <td>{{ item.locator or item.surface }}</td>
+                                <td>{{ item.replacement }}</td>
+                                <td>{{ item.preview }}</td>
+                                <td>{{ item.score }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5">暂无命中明细</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {% if report.warnings %}
+            <section class="section">
+                <div class="section-head">
+                    <h2 class="section-title">注意事项</h2>
+                </div>
+                <div class="card">
+                    {% for warning in report.warnings %}
+                    <p class="notice" style="margin-bottom:10px">{{ warning }}</p>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        </main>
+    </div>
+    {% endif %}
+    <div id="downloadToast" class="download-toast"></div>
+    <script>
+    function apiUrl(path) {
+        try { return new URL(path, window.location.href).toString(); } catch (_) { return path; }
+    }
+    function showDownloadToast(message) {
+        const toast = document.getElementById('downloadToast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4200);
+    }
+    document.querySelectorAll('[data-download-type]').forEach(link => {
+        link.addEventListener('click', async event => {
+            event.preventDefault();
+            const type = link.dataset.downloadType;
+            try {
+                const res = await fetch(apiUrl(`/api/desensitize/save-download/{{ task.id }}/${encodeURIComponent(type)}`), { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok || !data.ok) throw new Error(data.error || '保存失败');
+                showDownloadToast(`已保存到：${data.path}`);
+            } catch (error) {
+                showDownloadToast(error?.message || '保存失败');
+                window.location.href = link.href;
+            }
+        });
+    });
+    </script>
+</body>
+</html>

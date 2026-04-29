@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>插件设置</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="brand-row">
+        <div class="brand">Compliance<span>AI</span></div>
+      </div>
+
+      <section class="settings-card">
+        <div class="field-stack">
+          <label class="field-label" for="aiEnabled">AI 增强</label>
+          <input id="aiEnabled" type="checkbox" />
+        </div>
+        <div class="field-stack">
+          <label class="field-label" for="apiKey">DeepSeek API Key</label>
+          <input id="apiKey" class="field-input" placeholder="sk-..." />
+        </div>
+        <div class="field-stack">
+          <label class="field-label" for="baseUrl">Base URL</label>
+          <input id="baseUrl" class="field-input" placeholder="https://api.deepseek.com" />
+        </div>
+        <div class="field-stack">
+          <label class="field-label" for="model">模型名</label>
+          <input id="model" class="field-input" placeholder="deepseek-chat" />
+        </div>
+        <button id="saveSettingsButton" class="primary-button">保存设置</button>
+        <div id="settingsStatus" class="status-box">可选：开启 AI 增强后，结果会补充改写建议。</div>
+      </section>
+    </div>
+
+    <script type="module" src="./ui/options.js"></script>
+  </body>
+</html>
