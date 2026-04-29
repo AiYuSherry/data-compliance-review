@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据合规审查</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="brand-row">
+        <div class="brand">Compliance<span>AI</span></div>
+        <button id="openSettingsButton" class="ghost-button">设置</button>
+      </div>
+
+      <section class="panel-card">
+        <div class="field-stack">
+          <label class="field-label" for="documentName">文档名称</label>
+          <input id="documentName" class="field-input" placeholder="例：某 App 隐私政策 V2.1" />
+        </div>
+
+        <div class="action-row">
+          <button id="pickFileButton" class="secondary-button">上传文档</button>
+          <button id="currentPageButton" class="secondary-button">读取当前页 PDF</button>
+        </div>
+        <input id="fileInput" type="file" hidden accept=".txt,.md,.doc,.docx,.pdf" />
+
+        <div class="field-stack" style="margin-top: 18px">
+          <label class="field-label" for="textInput">或直接粘贴文本</label>
+          <textarea id="textInput" class="field-textarea" placeholder="直接粘贴隐私政策、协议或审查材料正文..."></textarea>
+        </div>
+
+        <button id="startReviewButton" class="primary-button full-width">开始审查</button>
+        <div id="statusBox" class="status-box">等待输入</div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-head">
+          <h2>最近任务</h2>
+        </div>
+        <div id="recentJobs" class="recent-jobs"></div>
+      </section>
+    </div>
+
+    <script type="module" src="./ui/sidepanel.js"></script>
+  </body>
+</html>

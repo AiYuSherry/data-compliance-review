@@ -9,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = ROOT / 'scripts'
+PYTHON = sys.executable or 'python3'
 
 
 def run(cmd: list[str]) -> str:
@@ -50,8 +51,8 @@ def main() -> int:
     privacy_remediation_pack = work_dir / '13_privacy_remediation_pack.json'
     remediation_tasks = work_dir / '14_remediation_tasks.json'
 
-    preprocess_cmd = ['python3', str(SCRIPTS / 'preprocess_input.py'), '--output', str(preprocessed)]
-    classify_cmd = ['python3', str(SCRIPTS / 'classify_document_type.py')]
+    preprocess_cmd = [PYTHON, str(SCRIPTS / 'preprocess_input.py'), '--output', str(preprocessed)]
+    classify_cmd = [PYTHON, str(SCRIPTS / 'classify_document_type.py')]
     if args.file:
         preprocess_cmd += ['--file', args.file]
         classify_cmd += ['--file', args.file]
@@ -61,12 +62,12 @@ def main() -> int:
 
     run(preprocess_cmd)
     classification.write_text(run(classify_cmd), encoding='utf-8')
-    planned.write_text(run(['python3', str(SCRIPTS / 'plan_review_paths.py'), '--classification', str(classification)]), encoding='utf-8')
-    run(['python3', str(SCRIPTS / 'generate_review_tasks.py'), '--classification', str(classification), '--planned-paths', str(planned), '--output', str(tasks)])
+    planned.write_text(run([PYTHON, str(SCRIPTS / 'plan_review_paths.py'), '--classification', str(classification)]), encoding='utf-8')
+    run([PYTHON, str(SCRIPTS / 'generate_review_tasks.py'), '--classification', str(classification), '--planned-paths', str(planned), '--output', str(tasks)])
 
     classification_data = json.loads(classification.read_text(encoding='utf-8'))
     run([
-        'python3', str(SCRIPTS / 'build_report_skeleton.py'),
+        PYTHON, str(SCRIPTS / 'build_report_skeleton.py'),
         '--document-name', args.document_name,
         '--doc-type', classification_data.get('type', 'unknown'),
         '--paths-file', str(planned),
@@ -75,20 +76,20 @@ def main() -> int:
 
     findings_dir.mkdir(parents=True, exist_ok=True)
     findings_payload = run([
-        'python3', str(SCRIPTS / 'run_rule_based_review.py'),
+        PYTHON, str(SCRIPTS / 'run_rule_based_review.py'),
         '--preprocessed', str(preprocessed),
         '--tasks', str(tasks),
         '--out-dir', str(findings_dir)
     ])
     findings = json.loads(findings_payload)['findings']
 
-    run(['python3', str(SCRIPTS / 'aggregate_review_findings.py'), '--skeleton', str(skeleton), '--findings', *findings, '--output', str(final_report)])
+    run([PYTHON, str(SCRIPTS / 'aggregate_review_findings.py'), '--skeleton', str(skeleton), '--findings', *findings, '--output', str(final_report)])
 
     report_for_bundle = final_report
     norm_mapping_path = args.norm_mapping.strip() or (str(default_norm_mapping) if default_norm_mapping.exists() else '')
     if norm_mapping_path:
         run([
-            'python3', str(SCRIPTS / 'apply_external_norm_mapping.py'),
+            PYTHON, str(SCRIPTS / 'apply_external_norm_mapping.py'),
             '--report', str(final_report),
             '--mapping', norm_mapping_path,
             '--output', str(enriched_report)
@@ -96,7 +97,7 @@ def main() -> int:
         report_for_bundle = enriched_report
 
     run([
-        'python3', str(SCRIPTS / 'auto_recheck_report.py'),
+        PYTHON, str(SCRIPTS / 'auto_recheck_report.py'),
         '--report', str(report_for_bundle),
         '--output', str(auto_rechecked_report),
         '--queue-output', str(auto_recheck_queue),
@@ -105,30 +106,30 @@ def main() -> int:
     report_for_bundle = auto_rechecked_report
 
     run([
-        'python3', str(SCRIPTS / 'enhance_suggestions_with_llm.py'),
+        PYTHON, str(SCRIPTS / 'enhance_suggestions_with_llm.py'),
         '--report', str(report_for_bundle),
         '--output', str(llm_enhanced_report),
     ])
     report_for_bundle = llm_enhanced_report
 
-    bundle = run(['python3', str(SCRIPTS / 'render_report_bundle.py'), str(report_for_bundle), '--out-dir', str(bundle_dir)])
+    bundle = run([PYTHON, str(SCRIPTS / 'render_report_bundle.py'), str(report_for_bundle), '--out-dir', str(bundle_dir)])
 
     run([
-        'python3', str(SCRIPTS / 'build_application_scenario_plan.py'),
+        PYTHON, str(SCRIPTS / 'build_application_scenario_plan.py'),
         '--report', str(report_for_bundle),
         '--classification', str(classification),
         '--output', str(application_plan)
     ])
 
     run([
-        'python3', str(SCRIPTS / 'build_evidence_checklist.py'),
+        PYTHON, str(SCRIPTS / 'build_evidence_checklist.py'),
         '--report', str(report_for_bundle),
         '--application-plan', str(application_plan),
         '--output', str(evidence_checklist)
     ])
 
     run([
-        'python3', str(SCRIPTS / 'build_sdk_partner_review_pack.py'),
+        PYTHON, str(SCRIPTS / 'build_sdk_partner_review_pack.py'),
         '--report', str(report_for_bundle),
         '--application-plan', str(application_plan),
         '--evidence-checklist', str(evidence_checklist),
@@ -136,7 +137,7 @@ def main() -> int:
     ])
 
     run([
-        'python3', str(SCRIPTS / 'build_cross_border_review_pack.py'),
+        PYTHON, str(SCRIPTS / 'build_cross_border_review_pack.py'),
         '--report', str(report_for_bundle),
         '--application-plan', str(application_plan),
         '--evidence-checklist', str(evidence_checklist),
@@ -144,7 +145,7 @@ def main() -> int:
     ])
 
     run([
-        'python3', str(SCRIPTS / 'build_privacy_remediation_pack.py'),
+        PYTHON, str(SCRIPTS / 'build_privacy_remediation_pack.py'),
         '--report', str(report_for_bundle),
         '--application-plan', str(application_plan),
         '--evidence-checklist', str(evidence_checklist),
@@ -152,7 +153,7 @@ def main() -> int:
     ])
 
     run([
-        'python3', str(SCRIPTS / 'build_remediation_task_plan.py'),
+        PYTHON, str(SCRIPTS / 'build_remediation_task_plan.py'),
         '--report', str(report_for_bundle),
         '--queue', str(auto_recheck_queue),
         '--clusters', str(risk_clusters),
