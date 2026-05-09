@@ -4,6 +4,15 @@
 
 ---
 
+[2026-05-09 19:50] — 你 — 脱敏结果页重构：系统字体、黑白极简、暗色模式
+
+- 脱敏结果页全面重构：移除 Google Fonts 依赖，改用系统原生字体栈（SF Pro / PingFang SC）；配色从 SaaS 蓝白（`#4f46e5`）改为黑白极简（`#111111`）；新增完整暗色模式支持
+- 默认端口从 5566 改为 5577（5566 被其他进程占用）
+- 脱敏结果页 `document_name` 以任务中的用户上传文件名为准，不再显示任务 ID 占位
+- 删除 `DESENSITIZATION_CONTRACT.md`，接口契约已整合到主文档
+- 新增 `data-compliance-web/static/` 品牌资源目录
+- **文件改动**：`data-compliance-web/app.py`、`data-compliance-web/templates/desensitize_result.html`、`data-compliance-web/templates/index.html`、`data-compliance-web/templates/result.html`、`DESENSITIZATION_CONTRACT.md`
+
 [2026-05-04 00:40] — 你 — 收掉工作区里的新建任务按钮，只保留业务入口
 
 - 工作区侧边栏去掉“+新建任务”按钮，进一步压缩成只剩“脱敏 / 审查”两项，避免把入口和编辑动作混在一起。

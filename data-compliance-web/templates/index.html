@@ -10,13 +10,13 @@
             --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
             --font-reading: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
             --font-mono: "SF Mono", Menlo, Monaco, Consolas, monospace;
-            --page: #f4f1ea;
-            --panel: #fffdf8;
-            --panel-strong: #f9f4e8;
+            --page: #ffffff;
+            --panel: #ffffff;
+            --panel-strong: #ffffff;
             --ink: #161a1d;
             --muted: #66706d;
             --faint: #8c9692;
-            --line: #d9d1c3;
+            --line: #d4d4d4;
             --teal: #006d6a;
             --teal-soft: #d7eeeb;
             --amber: #b86816;
@@ -44,8 +44,8 @@
             position: sticky;
             top: 0;
             z-index: 20;
-            background: rgba(244, 241, 234, 0.88);
-            border-bottom: 1px solid rgba(217, 209, 195, 0.8);
+            background: rgba(255, 255, 255, 0.88);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
             backdrop-filter: blur(18px);
         }
         .header-inner {
@@ -64,7 +64,18 @@
             font-weight: 760;
             letter-spacing: 0;
         }
-        .logo span { color: var(--teal); }
+        .brand-logo {
+            display: block;
+            text-decoration: none;
+        }
+        .brand-logo img {
+            display: block;
+            width: 150px;
+            height: auto;
+        }
+        body.dark.raven-layout .brand-logo img {
+            filter: brightness(2) contrast(0.85);
+        }
         .header-status {
             display: flex;
             align-items: center;
@@ -780,15 +791,6 @@
             letter-spacing: 0;
         }
         body.raven-layout .logo span { color: #111; }
-        .brand-subtitle {
-            margin-top: 4px;
-            padding: 0 8px;
-            color: #787878;
-            font-size: 12px;
-            line-height: 1.4;
-            text-align: center;
-            max-width: 190px;
-        }
         .new-task {
             display: flex;
             align-items: center;
@@ -1408,7 +1410,6 @@
             background: #1e1e20;
             border-right-color: #3f3f46;
         }
-        body.dark.raven-layout .brand-subtitle { color: #a1a1aa; }
         body.dark.raven-layout .side-nav a,
         body.dark.raven-layout .side-nav button { color: #d4d4d8; }
         body.dark.raven-layout .side-nav a.active,
@@ -1615,13 +1616,14 @@
         <div class="header-inner">
             <div class="brand-block">
                 <div class="brand-top">
-                    <div class="logo">Compliance<span>AI</span></div>
+                    <a href="/" class="brand-logo">
+                        <img src="/static/brand-logo.png" alt="ComplianceAI">
+                    </a>
                     <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换主题">
                         <span class="theme-icon-light">☀</span>
                         <span class="theme-icon-dark">☾</span>
                     </button>
                 </div>
-                <p class="brand-subtitle">Local compliance review desk</p>
             </div>
             <style>
             .brand-top {
@@ -1883,8 +1885,8 @@
         const ext = dotIndex >= 0 ? trimmed.slice(dotIndex) : '';
         const stem = dotIndex >= 0 ? trimmed.slice(0, dotIndex) : trimmed;
         const normalizedStem = stem
-            .normalize('NFKD')
-            .replace(/[^\w.-]+/g, '_')
+            .normalize('NFKC')
+            .replace(/[\x00-\x1f\x7f<>:"\/\\|?*]+/g, '_')
             .replace(/_+/g, '_')
             .replace(/^_+|_+$/g, '') || 'upload';
         return `${normalizedStem}${ext}`;

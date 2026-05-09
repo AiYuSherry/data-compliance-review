@@ -1268,6 +1268,9 @@ def render_desensitize_result(task_id):
         if not report_path.exists():
             return '脱敏报告不存在', 404
         report = json.loads(report_path.read_text(encoding='utf-8'))
+        # 以任务中的 document_name 为准（来自前端自动填入的文件原名）
+        if task.get('document_name'):
+            report['document_name'] = task['document_name']
     return render_template('desensitize_result.html', task=task, report=report)
 
 
@@ -1704,7 +1707,7 @@ if __name__ == '__main__':
     print("=" * 60)
     print("数据合规智能审查系统")
     print("=" * 60)
-    PORT = 5566
+    PORT = 5577
     print(f"访问地址: http://127.0.0.1:{PORT}")
     print("按 Ctrl+C 停止服务")
     print("=" * 60)
