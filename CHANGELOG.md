@@ -10,7 +10,7 @@
 - 默认端口从 5566 改为 5577（5566 被其他进程占用）
 - 脱敏结果页 `document_name` 以任务中的用户上传文件名为准，不再显示任务 ID 占位
 - 删除 `DESENSITIZATION_CONTRACT.md`，接口契约已整合到主文档
-- 新增 `data-compliance-web/static/` 品牌资源目录
+- 替换产品 Logo：新增 `data-compliance-web/static/` 目录，改用新品牌标识文件替代原有内联 Logo
 - **文件改动**：`data-compliance-web/app.py`、`data-compliance-web/templates/desensitize_result.html`、`data-compliance-web/templates/index.html`、`data-compliance-web/templates/result.html`、`DESENSITIZATION_CONTRACT.md`
 
 [2026-05-04 00:40] — 你 — 收掉工作区里的新建任务按钮，只保留业务入口
